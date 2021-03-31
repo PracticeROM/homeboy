@@ -245,7 +245,7 @@ int hb_fat_event(void *hb_fat_p, int event, void *arg){
 void homeboy_fat_init(void)
 {
     xlObjectMake((void**)&hb_fat_obj, NULL, &hb_fat_class);
-    cpuMapObject(gSystem->cpu, hb_fat_obj, 0x8058000, 0x805BFFF, 0);
+    cpuMapObject(gSystem->cpu, hb_fat_obj, 0x9058000, 0x905BFFF, 0);
 }
 
 #endif
