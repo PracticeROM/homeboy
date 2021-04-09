@@ -1372,7 +1372,7 @@ void fat_root(fat_ctxt_t *fat, fat_file_t *file){
 
 void fat_free(fat_path_t *fp){
     list_destroy(&fp->entry_list);
-    xlHeapFree(fp);
+    xlHeapFree(&fp);
 }
 
 void fat_rewind(fat_file_t *file){
@@ -1604,7 +1604,7 @@ int fat_create(fat_ctxt_t *fat, fat_entry_t *dir, const char *path, uint8_t attr
         memcpy(dir_path, dir_s, dir_len);
         dir_path[dir_len] = 0;
         int e = fat_find(fat, dir, dir_path, &dir_ent);
-        xlHeapFree(dir_path);
+        xlHeapFree(&dir_path);
         if(e){
             return -1;
         }

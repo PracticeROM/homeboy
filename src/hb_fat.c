@@ -85,6 +85,9 @@ typedef struct {
                     char *path;
                     struct stat *stat;
                 } stat;
+                struct {
+                    char *path;
+                } chdir;
             };
         };
         uint32_t regs[6];
@@ -182,6 +185,12 @@ void run_command()
             char *path = n64_dram + (((uint32_t)hb_fat_obj->stat.path) & 0x3FFFFFF);
             struct stat *buf = n64_dram + (((uint32_t)hb_fat_obj->stat.stat) & 0x3FFFFFF);
             *(int*)get_n64_buf = stat(path, buf);
+            break;
+        }
+        case SYS_CHDIR:
+        {
+            char *path = n64_dram + (((uint32_t)hb_fat_obj->chdir.path) & 0x3FFFFFF);
+            *(int*)get_n64_buf = chdir(path);
             break;
         }
 

@@ -243,7 +243,7 @@ void list_erase(struct list *list, void *element)
     header->prev->next = header->next;
   if (header->next)
     header->next->prev = header->prev;
-  xlHeapFree(header);
+  xlHeapFree(&header);
   --list->size;
 }
 
@@ -255,7 +255,7 @@ void list_destroy(struct list *list)
                                            ELEMENT_HEADER_SIZE);
   while (header) {
     struct list_element_header *next_header = header->next;
-    xlHeapFree(header);
+    xlHeapFree(&header);
     header = next_header;
   }
 }

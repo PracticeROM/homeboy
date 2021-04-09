@@ -160,7 +160,7 @@ static void ent_stat(fat_entry_t *ent, struct stat *buf){
 static void delete_desc(int file){
     desc_t *desc = desc_list[file];
     fat_free(desc->fp);
-    xlHeapFree(desc);
+    xlHeapFree(&desc);
     desc_list[file] = NULL;
 }
 
