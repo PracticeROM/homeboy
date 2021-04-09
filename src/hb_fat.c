@@ -32,8 +32,8 @@ enum {
     SYS_SEEK_DIR,
     SYS_TELL_DIR,
     SYS_REWIND_DIR,
-    SYS_RM_DIR,
-    SYS_MK_DIR,
+    SYS_RMDIR,
+    SYS_MKDIR,
     SYS_STAT,
     SYS_LSTAT
 };
@@ -88,6 +88,10 @@ typedef struct {
                 struct {
                     char *path;
                 } chdir;
+                struct {
+                    char *path;
+                    mode_t mode;
+                } mkdir;
             };
         };
         uint32_t regs[6];
@@ -191,6 +195,12 @@ void run_command()
         {
             char *path = n64_dram + (((uint32_t)hb_fat_obj->chdir.path) & 0x3FFFFFF);
             *(int*)get_n64_buf = chdir(path);
+            break;
+        }
+        case SYS_MKDIR:
+        {
+            char *path = n64_dram + (((uint32_t)hb_fat_obj->mkdir.path) & 0x3FFFFFF);
+            *(int*)get_n64_buf = mkdir(path, hb_fat_obj->mkdir.mode);
             break;
         }
 
