@@ -85,8 +85,8 @@
 bool sdio_is_initialized(void);
 bool sdio_is_inserted(void);
 bool sdio_is_sdhc(void);
-bool sdio_write_sectors(uint32_t sector, uint32_t numSectors,const void* buffer);
-bool sdio_read_sectors(uint32_t sector, uint32_t numSectors,void* buffer);
+bool sdio_write_sectors(uint32_t sector, uint32_t sec_cnt, void *buffer);
+bool sdio_read_sectors(uint32_t sector, uint32_t sec_cnt,void *buffer);
 bool sdio_stop(void);
 bool sdio_start(void);
 
