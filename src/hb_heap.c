@@ -98,10 +98,14 @@ int hb_heap_event(void *heap_p, int event, void *arg)
     }
 }
 
+void *hb_frame_buffer[2];
+
 void homeboy_heap_init(void)
 {
     xlObjectMake((void**)&hb_heap_obj, NULL, &hb_heap_class);
     cpuMapObject(gSystem->cpu, hb_heap_obj, 0x08060000, 0x08C60000, 0);
+    allocMEM2(&hb_frame_buffer[0], 0x25800);
+    allocMEM2(&hb_frame_buffer[1], 0x25800);
 }
 
 #endif
