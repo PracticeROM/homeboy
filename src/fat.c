@@ -96,7 +96,7 @@ static _Bool char_is_short_file_name(char c, enum sfn_case *cse){
     return (c >= '@' && c <= 'Z') || (c >= '0' && c <= '9') ||
            (c >= '#' && c <= ')') || (c >= '^' && c <= '`') ||
            (c >= '\x80' && c <= '\xFF') ||
-           c == ' ' || c == '!' || c == '-' || c == '{' || c == '}' || c == '~';
+           c == '!' || c == '-' || c == '{' || c == '}' || c == '~';
 }
 
 static int convert_long_name_to_short_name(const char *s, int s_len, char *buf, int buf_len){
@@ -231,8 +231,14 @@ static _Bool validate_short_file_name(const char *short_file_name){
         return short_file_name[1] == '.' || short_file_name[1] == ' ';
     }
     enum sfn_case cse = SFN_CASE_UPPER;
-    for(int i = 0;i < 11;i++){
-        if(!char_is_short_file_name(short_file_name[i], &cse)){
+    _Bool is_space = false;
+    for(int i = 0; i < 11; i++) {
+        if(i == 8) {
+            is_space = false;
+        }
+        if(short_file_name[i] == ' ') {
+            is_space = true;
+        } else if(is_space || !char_is_short_file_name(short_file_name[i], &cse)){
             return 0;
         }
     }
@@ -317,9 +323,7 @@ static _Bool name_is_short(const char *s, _Bool *lower_name, _Bool *lower_extens
     if(name_len == 0 || name_len > 8 || (extension && extension_len > 3)){
         return 0;
     }
-    if(name[name_len - 1] == ' ' || (extension && extension[extension_len - 1] == ' ')){
-        return 0;
-    }
+
     enum sfn_case name_cse = SFN_CASE_ANY;
     enum sfn_case ext_cse = SFN_CASE_ANY;
     for(int i = 0;i < name_len;i++){
