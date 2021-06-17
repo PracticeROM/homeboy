@@ -1049,14 +1049,15 @@ static uint32_t cluster_rw(fat_file_t *file, enum fat_io rw, void *buf, uint32_t
     while(cluster_cnt > 0){
         uint32_t chunk_start = cluster;
         uint32_t chunk_len = 1;
+        uint32_t p_cluster = cluster;
         while(1){
-            uint32_t p_cluster = cluster;
             if(cluster_get(fat, cluster, &cluster)){
                 return copy_cnt;
             }
             if(cluster >= 0x0FFFFFF7 || cluster != p_cluster + 1 || chunk_len >= cluster_cnt){
                 break;
             }
+            p_cluster = cluster;
             chunk_len++;
         }
         uint32_t lba = fat->data_lba + fat->sectors_per_cluster * (chunk_start - 2);
@@ -1076,6 +1077,8 @@ static uint32_t cluster_rw(fat_file_t *file, enum fat_io rw, void *buf, uint32_t
         file->p_offset += byte_cnt;
         file->p_cluster_seq += chunk_len;
         if(cluster < 2 || cluster >= 0x0FFFFFF7){
+            file->p_cluster_seq--;
+            file->p_cluster = p_cluster;
             file->p_cluster_sector = fat->sectors_per_cluster - 1;
             file->p_sector_offset = fat->bytes_per_sector;
             if(eof){
