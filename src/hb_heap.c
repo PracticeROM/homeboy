@@ -90,8 +90,8 @@ int hb_heap_event(void *heap_p, int event, void *arg)
     // device mapped.
     if(event == 0x1002) {
         if(heap->heap_ptr == NULL){
-            allocMEM2(&heap->heap_ptr, 0x400000);
-            heap->heap_size = 0x00400000;
+            allocMEM2(&heap->heap_ptr, 0x800000);
+            heap->heap_size = 0x00800000;
         }
         cpuSetDevicePut(gSystem->cpu, arg, heap_sb, heap_sh, heap_sw, heap_sd);
         cpuSetDeviceGet(gSystem->cpu, arg, heap_lb, heap_lh, heap_lw, heap_ld);
@@ -103,7 +103,7 @@ void *hb_frame_buffer[2];
 void homeboy_heap_init(void)
 {
     xlObjectMake((void**)&hb_heap_obj, NULL, &hb_heap_class);
-    cpuMapObject(gSystem->cpu, hb_heap_obj, 0x08060000, 0x08C60000, 0);
+    cpuMapObject(gSystem->cpu, hb_heap_obj, 0x08060000, 0x08860000, 0);
     allocMEM2(&hb_frame_buffer[0], 0x25800);
     allocMEM2(&hb_frame_buffer[1], 0x25800);
 }
