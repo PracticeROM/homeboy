@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdint.h>
 #include <sys/stat.h>
 #include "vc.h"
@@ -35,7 +36,8 @@ enum {
     SYS_RMDIR,
     SYS_MKDIR,
     SYS_STAT,
-    SYS_LSTAT
+    SYS_LSTAT,
+    SYS_RESET
 };
 
 typedef struct {
@@ -43,6 +45,7 @@ typedef struct {
         struct {
             uint32_t command;
             uint32_t n64_buffer;
+            int err;
             union {
                 struct {
                     char *path;
@@ -94,7 +97,7 @@ typedef struct {
                 } mkdir;
             };
         };
-        uint32_t regs[6];
+        uint32_t regs[7];
     };
 } hb_fat_class_t;
 
@@ -203,8 +206,17 @@ void run_command()
             *(int*)get_n64_buf = mkdir(path, hb_fat_obj->mkdir.mode);
             break;
         }
-
+        case SYS_RESET:
+        {
+            *(int*)get_n64_buf = reset_disk();
+            break;
+        }
+        default:
+            errno = EINVAL;
+            break;
     }
+
+    hb_fat_obj->err = errno;
 }
 
 static bool lb(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *dst)
@@ -219,6 +231,7 @@ static bool lh(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *dst)
 
 static bool lw(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *dst)
 {
+    *dst = hb_fat_obj->regs[(addr & 0x7FFF) >> 2];
     return true;
 }
 

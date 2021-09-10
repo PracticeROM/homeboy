@@ -437,7 +437,7 @@ dirent_t *readdir(DIR *dir){
     do{
         if(fat_dir(&dd->base.file, &ent)){
             return NULL;
-        } 
+        }
     } while(ent.attributes & FAT_ATTRIBUTE_LABEL);
     dd->pos++;
     dirent_t *dirent = &dd->dirent;
@@ -477,17 +477,20 @@ error:
     return -1;
 }
 
-void reset_disk(void){
+int reset_disk(void) {
     fat_ready = 0;
-    for(int i = 0;i < FOPEN_MAX;i++){
-        if(desc_list[i]){
+    for(int i = 0; i < FOPEN_MAX; i++) {
+        if(desc_list[i]) {
             delete_desc(i);
         }
     }
-    if(wd){
+
+    if(wd) {
         fat_free(wd);
         wd = NULL;
     }
+
+    return 0;
 }
 off_t lseek(int file, off_t offset, int whence){
     file_desc_t *file_desc = get_desc(file);

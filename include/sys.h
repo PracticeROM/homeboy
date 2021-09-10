@@ -44,6 +44,6 @@ int         mkdir           (const char *path, mode_t mode);
 int         stat            (const char *path, struct stat *buf);
 int         lstat           (const char *path, struct stat *buf);
 void        __assert_func   (const char *file, int line, const char *func, const char *failedexpr);
-void        reset_disk      (void);
+int         reset_disk      (void);
 
 #endif
