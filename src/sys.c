@@ -478,6 +478,7 @@ error:
 }
 
 int reset_disk(void) {
+    errno = 0;
     fat_ready = 0;
     for(int i = 0; i < FOPEN_MAX; i++) {
         if(desc_list[i]) {
@@ -489,6 +490,8 @@ int reset_disk(void) {
         fat_free(wd);
         wd = NULL;
     }
+
+    sdio_stop();
 
     return 0;
 }
