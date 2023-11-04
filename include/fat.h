@@ -8,6 +8,7 @@
 #define _FAT_H
 
 #include <stdint.h>
+#include <time.h>
 #include "list.h"
 
 #define FAT_MAX_CACHE_SECTOR    4
