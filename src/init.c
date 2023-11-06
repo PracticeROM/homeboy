@@ -10,6 +10,7 @@
 #include "sys.h"
 #include "vc.h"
 #include "hb_exception.h"
+#include "hb_n64vcmem.h"
 
 #define HB_HEAPSIZE         0xD000
 
@@ -32,6 +33,9 @@ ENTRY bool _start(void **dest, size_t size)
 #ifdef HB_DBG
     homeboy_debug_init();
 #endif
+#ifdef HB_N64VCMEM
+    homeboy_n64vcmem_init();
+#endif
 #ifdef HB_EXCEPTIONS
     init_hb_exceptions();
 #endif
@@ -50,8 +54,8 @@ ENTRY bool _start(void **dest, size_t size)
 
 
     sprintf(dram_fn, "/title/00010001/%8x/data/dram_save", title_id);
-    
-    // Check if a dram restore needs to be done. 
+
+    // Check if a dram restore needs to be done.
     int fd = fs_open(dram_fn,1);
     if(fd >= 0)
     {
