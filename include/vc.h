@@ -156,19 +156,30 @@ typedef struct OSThread {
 
 typedef void (*ex_handler_t)(enum ppc_exception);
 
+#if IS_OOT
+bool cpuExecuteUpdate(Cpu* cpu, int32_t* pnAddressGCN, int32_t nCount);
+#elif IS_MM
+bool cpuExecuteUpdate(Cpu* cpu, int32_t* pnAddressGCN, int64_t nTime);
+#endif
 int cpuMapObject(Cpu* cpu, void* dev_p, uint32_t address_start, uint32_t address_end, uint32_t param_5);
 int cpuSetDeviceGet(Cpu* cpu, CpuDevice* dev, void* lb, void* lh, void* lw, void* ld);
 int cpuSetDevicePut(Cpu* cpu, CpuDevice* dev, void* sb, void* sh, void* sw, void* sd);
+bool cpuFindFunction(Cpu* cpu, int theAddress, CpuFunction** tree_node);
 bool ramSetSize(void** dest, uint32_t size);
 bool xlHeapTake(void** dest, uint32_t size);
 bool xlHeapFree(void* ptr);
 int xlObjectMake(void** obj, void* parent, _XL_OBJECTTYPE* class);
+
+void DCStoreRange(const void* buf, uint32_t len);
+void ICInvalidateRange(const void* buf, uint32_t len);
 
 void OSReport(const char* msg, ...);
 void OSCreateThread(OSThread* thread, void* (*func)(void*), void* arg, void* stack, size_t stack_size, int pri,
                     int detached);
 void OSResumeThread(OSThread* thread);
 void OSSuspendThread(OSThread* thread);
+int64_t OSGetTime(void);
+uint32_t OSGetTick(void);
 
 int IOS_OpenAsync(const char* file, int mode, void* callback, void* callback_data);
 int IOS_Open(const char* file, int mode);
@@ -190,6 +201,7 @@ int iosCreateHeap(void* heap, size_t size);
 void* iosAllocAligned(int hid, size_t size, size_t page_size);
 bool iosFree(int hid, void* ptr);
 
+extern int32_t ganMapGPR[32];
 extern System* gpSystem;
 extern uint32_t reset_flag; // TODO: use decomp name
 
