@@ -1,10 +1,10 @@
+#include "hb_heap.h"
+#include "homeboy.h"
+#include "sys.h"
+#include "vc.h"
 #include <errno.h>
 #include <stdint.h>
 #include <sys/stat.h>
-#include "vc.h"
-#include "sys.h"
-#include "homeboy.h"
-#include "hb_heap.h"
 
 #if HB_FAT
 
@@ -48,51 +48,51 @@ typedef struct {
             int err;
             union {
                 struct {
-                    char *path;
+                    char* path;
                     uint32_t open_flags;
                     uint32_t has_mode;
                     uint32_t mode;
                 } open;
                 struct {
-                    char *dir;
+                    char* dir;
                 } opendir;
                 struct {
-                    void *dir;
+                    void* dir;
                 } close_dir;
                 struct {
-                    void *dir;
-                    dirent_t *buf;
+                    void* dir;
+                    dirent_t* buf;
                 } read_dir;
                 struct {
-                    char *path;
+                    char* path;
                     uint32_t mode;
                 } creat;
                 struct {
                     int fd;
-                    void *buf;
+                    void* buf;
                     uint32_t byte_cnt;
                 } write;
                 struct {
                     int fd;
-                    void *buf;
+                    void* buf;
                     uint32_t byte_cnt;
                 } read;
                 struct {
                     int fd;
                 } close;
                 struct {
-                    void *buf;
+                    void* buf;
                     size_t size;
                 } getcwd;
                 struct {
-                    char *path;
-                    struct stat *stat;
+                    char* path;
+                    struct stat* stat;
                 } stat;
                 struct {
-                    char *path;
+                    char* path;
                 } chdir;
                 struct {
-                    char *path;
+                    char* path;
                     mode_t mode;
                 } mkdir;
             };
@@ -101,46 +101,35 @@ typedef struct {
     };
 } hb_fat_class_t;
 
-static hb_fat_class_t *hb_fat_obj = NULL;
+static hb_fat_class_t* hb_fat_obj = NULL;
 
-int hb_fat_event(void *hb_fat_p, int event, void *arg);
+int hb_fat_event(void* hb_fat_p, int event, void* arg);
 
-static _XL_OBJECTTYPE hb_fat_class = {
-    "HB-FAT",
-    sizeof(hb_fat_class_t),
-    0,
-    hb_fat_event
-};
+static _XL_OBJECTTYPE hb_fat_class = {"HB-FAT", sizeof(hb_fat_class_t), 0, hb_fat_event};
 
-void run_command()
-{
-    switch(hb_fat_obj->command)
-    {
-        case SYS_OPEN:
-        {
-            char *path = n64_dram + (((uint32_t)hb_fat_obj->open.path) & 0x3FFFFFF);
-            if(hb_fat_obj->open.has_mode){
+void run_command() {
+    switch (hb_fat_obj->command) {
+        case SYS_OPEN: {
+            char* path = n64_dram + (((uint32_t)hb_fat_obj->open.path) & 0x3FFFFFF);
+            if (hb_fat_obj->open.has_mode) {
                 *(uint32_t*)get_n64_buf = open(path, hb_fat_obj->open.open_flags, hb_fat_obj->open.mode);
             } else {
                 *(uint32_t*)get_n64_buf = open(path, hb_fat_obj->open.open_flags);
             }
             break;
         }
-        case SYS_OPEN_DIR:
-        {
-            char *path = n64_dram + (((uint32_t)hb_fat_obj->opendir.dir) & 0x3FFFFFF);
+        case SYS_OPEN_DIR: {
+            char* path = n64_dram + (((uint32_t)hb_fat_obj->opendir.dir) & 0x3FFFFFF);
             *(DIR**)get_n64_buf = opendir(path);
             break;
         }
-        case SYS_CLOSE_DIR:
-        {
+        case SYS_CLOSE_DIR: {
             *(int*)get_n64_buf = closedir(hb_fat_obj->close_dir.dir);
         }
-        case SYS_READ_DIR:
-        {
-            dirent_t *dirent = readdir(hb_fat_obj->read_dir.dir);
-            if(dirent != NULL){
-                dirent_t *n64_dirent = n64_dram + (((uint32_t)hb_fat_obj->read_dir.buf) & 0x3FFFFFF);
+        case SYS_READ_DIR: {
+            dirent_t* dirent = readdir(hb_fat_obj->read_dir.dir);
+            if (dirent != NULL) {
+                dirent_t* n64_dirent = n64_dram + (((uint32_t)hb_fat_obj->read_dir.buf) & 0x3FFFFFF);
                 *n64_dirent = *dirent;
                 *(int*)get_n64_buf = 1;
             } else {
@@ -148,16 +137,14 @@ void run_command()
             }
             break;
         }
-        case SYS_CREAT:
-        {
-            char *path = n64_dram + (((uint32_t)hb_fat_obj->creat.path) & 0x3FFFFFF);
+        case SYS_CREAT: {
+            char* path = n64_dram + (((uint32_t)hb_fat_obj->creat.path) & 0x3FFFFFF);
             *(int*)get_n64_buf = creat(path, hb_fat_obj->creat.mode);
             break;
         }
-        case SYS_WRITE:
-        {
-            void *buf = hb_fat_obj->write.buf;
-            if((uint32_t)buf >= HB_HEAP_START) {
+        case SYS_WRITE: {
+            void* buf = hb_fat_obj->write.buf;
+            if ((uint32_t)buf >= HB_HEAP_START) {
                 buf = (char*)hb_heap_obj->heap_ptr + ((uint32_t)buf - HB_HEAP_START);
             } else {
                 buf = (char*)n64_dram + ((uint32_t)buf & 0x3FFFFFF);
@@ -165,49 +152,43 @@ void run_command()
             *(int*)get_n64_buf = write(hb_fat_obj->write.fd, buf, hb_fat_obj->write.byte_cnt);
             break;
         }
-        case SYS_READ:
-        {
-            void *buf = hb_fat_obj->read.buf;
-            if((uint32_t)buf >= HB_HEAP_START) {
-                buf = (char*)hb_heap_obj->heap_ptr + ((uint32_t)buf - HB_HEAP_START);;
+        case SYS_READ: {
+            void* buf = hb_fat_obj->read.buf;
+            if ((uint32_t)buf >= HB_HEAP_START) {
+                buf = (char*)hb_heap_obj->heap_ptr + ((uint32_t)buf - HB_HEAP_START);
+                ;
             } else {
                 buf = (char*)n64_dram + ((uint32_t)buf & 0x3FFFFFF);
             }
             *(int*)get_n64_buf = read(hb_fat_obj->read.fd, buf, hb_fat_obj->read.byte_cnt);
             break;
         }
-        case SYS_CLOSE:
-        {
+        case SYS_CLOSE: {
             *(int*)get_n64_buf = close(hb_fat_obj->close.fd);
             break;
         }
-        case SYS_GET_CWD:
-        {
-            char *buf = n64_dram + (((uint32_t)hb_fat_obj->getcwd.buf) & 0x3FFFFFF);
+        case SYS_GET_CWD: {
+            char* buf = n64_dram + (((uint32_t)hb_fat_obj->getcwd.buf) & 0x3FFFFFF);
             getcwd(buf, hb_fat_obj->getcwd.size);
             break;
         }
-        case SYS_STAT:
-        {
-            char *path = n64_dram + (((uint32_t)hb_fat_obj->stat.path) & 0x3FFFFFF);
-            struct stat *buf = n64_dram + (((uint32_t)hb_fat_obj->stat.stat) & 0x3FFFFFF);
+        case SYS_STAT: {
+            char* path = n64_dram + (((uint32_t)hb_fat_obj->stat.path) & 0x3FFFFFF);
+            struct stat* buf = n64_dram + (((uint32_t)hb_fat_obj->stat.stat) & 0x3FFFFFF);
             *(int*)get_n64_buf = stat(path, buf);
             break;
         }
-        case SYS_CHDIR:
-        {
-            char *path = n64_dram + (((uint32_t)hb_fat_obj->chdir.path) & 0x3FFFFFF);
+        case SYS_CHDIR: {
+            char* path = n64_dram + (((uint32_t)hb_fat_obj->chdir.path) & 0x3FFFFFF);
             *(int*)get_n64_buf = chdir(path);
             break;
         }
-        case SYS_MKDIR:
-        {
-            char *path = n64_dram + (((uint32_t)hb_fat_obj->mkdir.path) & 0x3FFFFFF);
+        case SYS_MKDIR: {
+            char* path = n64_dram + (((uint32_t)hb_fat_obj->mkdir.path) & 0x3FFFFFF);
             *(int*)get_n64_buf = mkdir(path, hb_fat_obj->mkdir.mode);
             break;
         }
-        case SYS_RESET:
-        {
+        case SYS_RESET: {
             *(int*)get_n64_buf = reset_disk();
             break;
         }
@@ -219,63 +200,40 @@ void run_command()
     hb_fat_obj->err = errno;
 }
 
-static bool get8(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *dst)
-{
-    return false;
-}
+static bool get8(hb_fat_class_t* hb_fat, uint32_t addr, uint8_t* dst) { return false; }
 
-static bool get16(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *dst)
-{
-    return false;
-}
+static bool get16(hb_fat_class_t* hb_fat, uint32_t addr, uint16_t* dst) { return false; }
 
-static bool get32(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *dst)
-{
+static bool get32(hb_fat_class_t* hb_fat, uint32_t addr, uint32_t* dst) {
     *dst = hb_fat_obj->regs[(addr & 0x7FFF) >> 2];
     return true;
 }
 
-static bool get64(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *dst)
-{
-    return false;
-}
+static bool get64(hb_fat_class_t* hb_fat, uint32_t addr, uint64_t* dst) { return false; }
 
-static bool put8(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *src)
-{
-    return false;
-}
+static bool put8(hb_fat_class_t* hb_fat, uint32_t addr, uint8_t* src) { return false; }
 
-static bool put16(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *src)
-{
-    return false;
-}
+static bool put16(hb_fat_class_t* hb_fat, uint32_t addr, uint16_t* src) { return false; }
 
-static bool put32(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *src)
-{
+static bool put32(hb_fat_class_t* hb_fat, uint32_t addr, uint32_t* src) {
     addr &= 0x7FFF;
     hb_fat->regs[addr >> 2] = *src;
-    if(addr == 0)
-    {
+    if (addr == 0) {
         run_command();
     }
     return true;
 }
 
-static bool put64(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *src)
-{
-    return false;
-}
+static bool put64(hb_fat_class_t* hb_fat, uint32_t addr, uint64_t* src) { return false; }
 
-int hb_fat_event(void *hb_fat_p, int event, void *arg){
-    if(event == 0x1002)
-    {
+int hb_fat_event(void* hb_fat_p, int event, void* arg) {
+    if (event == 0x1002) {
         cpuSetDevicePut(SYSTEM_CPU(gpSystem), arg, put8, put16, put32, put64);
         cpuSetDeviceGet(SYSTEM_CPU(gpSystem), arg, get8, get16, get32, get64);
     }
 }
 
-void homeboy_fat_init(void)
-{
+void homeboy_fat_init(void) {
     xlObjectMake((void**)&hb_fat_obj, NULL, &hb_fat_class);
     cpuMapObject(SYSTEM_CPU(gpSystem), hb_fat_obj, 0x9060000, 0x9063FFF, 0);
 }

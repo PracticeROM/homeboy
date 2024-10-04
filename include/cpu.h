@@ -1,8 +1,8 @@
 #ifndef _CPU_H
 #define _CPU_H
 
-#include <stdint.h>
 #include "version.h"
+#include <stdint.h>
 
 // os.h
 #define OS_CACHED_REGION_PREFIX 0x8000
@@ -14,11 +14,9 @@ static inline void* OSPhysicalToCached(uint32_t ofs) { return (void*)(ofs + OS_B
 inline uint64_t gettick() {
     register uint32_t tbu;
     register uint32_t tbl;
-        __asm__ __volatile__ (
-            "mftbl %0\n"
-            "mftbu %1\n"
-            ::
-            "r"(tbl), "r"(tbu));
+    __asm__ __volatile__("mftbl %0\n"
+                         "mftbu %1\n" ::"r"(tbl),
+                         "r"(tbu));
     return (uint64_t)((uint64_t)tbu << 32 | tbl);
 }
 
@@ -349,54 +347,54 @@ struct Cpu {
 //! TODO: figure out this struct on MM
 //! (for now nothing is used so it doesn't matter except the size)
 struct Cpu {
-    uint32_t            status;                     /* 0x00000 */
-    char                unk_0x04[0x14];             /* 0x00004 */
-    struct System      *sys;                        /* 0x00018 */
-    char                unk_0x1C[0x4];              /* 0x0001C */
-    uint32_t            lo[2];                      /* 0x00020 */
-    uint32_t            hi[2];                      /* 0x00028 */
-    uint32_t            cache_cnt;                  /* 0x00030 */
-    uint8_t             phys_ram_dev_idx;           /* 0x00034 */
-    uint32_t            pc;                         /* 0x00038 */
-    char                unk_0x3C[0x10];             /* 0x0003C */
-    CpuFunction        *working_node;               /* 0x0004C */
-    char                unk_0x50[4];                /* 0x00050 */
-    int                 timer;                      /* 0x00054 */
+    /* 0x00000 */ uint32_t status;
+    /* 0x00004 */ char unk_0x04[0x14];
+    /* 0x00018 */ struct System* sys;
+    /* 0x0001C */ char unk_0x1C[0x4];
+    /* 0x00020 */ uint32_t lo[2];
+    /* 0x00028 */ uint32_t hi[2];
+    /* 0x00030 */ uint32_t cache_cnt;
+    /* 0x00034 */ uint8_t phys_ram_dev_idx;
+    /* 0x00038 */ uint32_t pc;
+    /* 0x0003C */ char unk_0x3C[0x10];
+    /* 0x0004C */ CpuFunction* working_node;
+    /* 0x00050 */ char unk_0x50[4];
+    /* 0x00054 */ int timer;
+    /* 0x00058 */ union {
+        uint64_t gpr64[32];
+        uint32_t gpr[64];
+    };
     union {
-        uint64_t        gpr64[32];
-        uint32_t        gpr[64];
-    };                                              /* 0x00058 */
-    union {
-        double          fpr64[32];
-        float           fpr[64];
-    };                                              /* 0x00158 */
-    char                unk_0x258[0x780];           /* 0x00258 */
-    uint32_t            FSCR[32];                   /* 0x009D8 */
-    uint32_t            cp0[64];                    /* 0x00A58 */
-    void               *exec_opcode_func;           /* 0x00B58 */
-    void               *exec_jump_func;             /* 0x00B5C */
-    void               *exec_call_func;             /* 0x00B60 */
-    void               *exec_idle_func;             /* 0x00B64 */
-    void               *exec_load_store_func;       /* 0x00B68 */
-    void               *exec_fp_load_store_func;    /* 0x00B6C */
-    uint32_t            time_hi;                    /* 0x00B70 */
-    uint32_t            time_lo;                    /* 0x00B74 */
-    char                unk_0xB78[8];               /* 0x00B78 */
-    CpuDevice          *cpu_devs[256];              /* 0x00B80 */
-    uint8_t             dev_idx[0x10000];           /* 0x00F80 */
-    void               *sm_blk_code;                /* 0x10F80 */
-    void               *lg_blk_code;                /* 0x10F84 */
-    uint32_t            sm_blk_alloc[256];          /* 0x10F88 */
-    uint32_t            lg_blk_alloc[13];           /* 0x11388 */
-    CpuTreeRoot        *tree_ctx;                   /* 0x113BC */
-    char                unk_0x113C0[0xDC0];         /* 0x113C0 */
-    uint32_t            known_regs;                 /* 0x12180 */
-    char                unk_0x12184[8];             /* 0x12184 */
-    uint32_t            jr_is_ra;                   /* 0x1218C */
-    char                unk_0x12190[0x18];          /* 0x12190 */
-    uint32_t            prev_loadstore_base;        /* 0x121A8 */
-    char                unk_0x121AC[0x14];          /* 0x121AC */
-};                                                  /* 0x121C0 */
+        double fpr64[32];
+        float fpr[64];
+    }; /* 0x00158 */
+    /* 0x00258 */ char unk_0x258[0x780];
+    /* 0x009D8 */ uint32_t FSCR[32];
+    /* 0x00A58 */ uint32_t cp0[64];
+    /* 0x00B58 */ void* exec_opcode_func;
+    /* 0x00B5C */ void* exec_jump_func;
+    /* 0x00B60 */ void* exec_call_func;
+    /* 0x00B64 */ void* exec_idle_func;
+    /* 0x00B68 */ void* exec_load_store_func;
+    /* 0x00B6C */ void* exec_fp_load_store_func;
+    /* 0x00B70 */ uint32_t time_hi;
+    /* 0x00B74 */ uint32_t time_lo;
+    /* 0x00B78 */ char unk_0xB78[8];
+    /* 0x00B80 */ CpuDevice* cpu_devs[256];
+    /* 0x00F80 */ uint8_t dev_idx[0x10000];
+    /* 0x10F80 */ void* sm_blk_code;
+    /* 0x10F84 */ void* lg_blk_code;
+    /* 0x10F88 */ uint32_t sm_blk_alloc[256];
+    /* 0x11388 */ uint32_t lg_blk_alloc[13];
+    /* 0x113BC */ CpuTreeRoot* tree_ctx;
+    /* 0x113C0 */ char unk_0x113C0[0xDC0];
+    /* 0x12180 */ uint32_t known_regs;
+    /* 0x12184 */ char unk_0x12184[8];
+    /* 0x1218C */ uint32_t jr_is_ra;
+    /* 0x12190 */ char unk_0x12190[0x18];
+    /* 0x121A8 */ uint32_t prev_loadstore_base;
+    /* 0x121AC */ char unk_0x121AC[0x14];
+}; // size = 0x121C0
 
 #endif
 
