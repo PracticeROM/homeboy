@@ -5,8 +5,8 @@
 
 typedef struct
 {
-	void       *data;
-	uint32_t    len;
+    void       *data;
+    uint32_t    len;
 } ioctlv;
 
 #endif

@@ -412,7 +412,7 @@ static void *cache_prep(fat_ctxt_t *fat, enum fat_cache_type type, uint32_t lba,
 
 static void *cache_load(fat_ctxt_t *fat, enum fat_cache_type type, uint32_t lba){
     fat_cache_t *cache = &fat->cache[type];
-    
+
     // loading from data in the cache already, and cache is valid
     if(cache->valid && cache->load_lba <= lba && cache->load_lba + cache->sector_cnt > lba){
         cache->prep_lba = lba;
@@ -854,7 +854,7 @@ static int dir_insert(fat_ctxt_t *fat, uint32_t dir_cluster, const char *name, t
         _Bool ate;
         if(fat_advance(&pos, 0x20, &ate) != 0x20){
             if(!ate){
-                return -1;  
+                return -1;
             }
             pos = ent_p;
             uint32_t new_cluster = cluster_find_free(fat, 0, 1, NULL);
@@ -919,7 +919,7 @@ static int dir_insert(fat_ctxt_t *fat, uint32_t dir_cluster, const char *name, t
                 errno = EINVAL;
             }
             return -1;
-        }    
+        }
     }
     set_word(short_file_name_buf, 0x0B, 1, attributes);
     cms += (create_time % 2) * 1000;
@@ -1028,7 +1028,7 @@ uint32_t fat_advance(fat_file_t *file, uint32_t byte_cnt, _Bool *eof){
         if(file->p_cluster_sector == fat->sectors_per_cluster){
             file->p_cluster_sector--;
             file->p_sector_offset += fat->bytes_per_sector;
-        } 
+        }
     }
     if(eof){
         *eof = ate;
@@ -1344,7 +1344,7 @@ int fat_dir(fat_file_t *dir, fat_entry_t *entry){
                 entry->cluster = get_word(ent_buf, 0x1A, 2);
                 if(fat->type == FAT32){
                     entry->cluster |= get_word(ent_buf, 0x14, 2) << 16;
-                
+
                     if(entry->cluster == fat->root_cluster){
                         entry->cluster = 0;
                     }

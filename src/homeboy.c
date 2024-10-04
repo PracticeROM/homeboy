@@ -17,7 +17,7 @@ char dram_fn[64];
 
 int homeboy_event(void *regs, int event, void *arg);
 
-static class_type_t homeboy_class = 
+static class_type_t homeboy_class =
 {
     "HOMEBOY",
     sizeof(hb_sd_regs_t),
@@ -25,7 +25,7 @@ static class_type_t homeboy_class =
     homeboy_event
 };
 
-static void do_write() 
+static void do_write()
 {
     homeboy_obj->ready = 0;
     homeboy_obj->busy = 1;
@@ -50,7 +50,7 @@ static void do_read()
 
     if(sdio_read_sectors(homeboy_obj->read_lba, homeboy_obj->block_cnt, (void*)((char*)n64_dram + homeboy_obj->addr)))
     {
-        homeboy_obj->error = SD_ERROR_SUCCESS;    
+        homeboy_obj->error = SD_ERROR_SUCCESS;
     }
     else
     {
@@ -80,11 +80,11 @@ static void do_read()
             fs_write(fd, (char*)n64_dram + dram_params[0], dram_params[1]);
             fs_close(fd);
         }
-        
+
         reset_flag = 1;
     }
 
-    if(homeboy_obj->initialize) 
+    if(homeboy_obj->initialize)
     {
         if(sdio_is_initialized())
         {
@@ -100,7 +100,7 @@ static void do_read()
             homeboy_obj->inserted = sdio_is_inserted();
             homeboy_obj->sdhc = sdio_is_sdhc();
             homeboy_obj->ready = 1;
-        } 
+        }
         else
         {
             homeboy_obj->error = SD_ERROR_INVAL;
@@ -112,7 +112,7 @@ static void do_read()
 
 #if IS_OOT
 #define ADDR_OFFSET 0x08050000
-#else 
+#else
 #define ADDR_OFFSET 0x100A0000
 #endif
 
@@ -177,10 +177,10 @@ bool sh(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *src)
 bool sw(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *src)
 {
     addr -= ADDR_OFFSET;
-    
+
     homeboy_obj->regs[addr >> 2] = *src;
-    
-    if(addr == 0x08) 
+
+    if(addr == 0x08)
     {
         do_write();
     }
@@ -188,7 +188,7 @@ bool sw(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *src)
     {
         do_read();
     }
-    else if(addr == 0x14) 
+    else if(addr == 0x14)
     {
         do_status_update();
     }

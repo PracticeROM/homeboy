@@ -19,7 +19,7 @@ static hb_dbg_class_t *hb_dbg_obj = NULL;
 
 int hb_debug_event(void *hb_dbg_p, int event, void *arg);
 
-static class_type_t hb_dbg_class = { 
+static class_type_t hb_dbg_class = {
     "HB-DBG",
     sizeof(hb_dbg_class_t),
     0,

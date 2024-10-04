@@ -59,7 +59,7 @@ void *dump_mem_thread(void *arg) {
         if(c == 3 || i == 31) {
             write_f(file, "GPR %d: %08x\n", i, faulting_copy.gpr[i]);
             c = 0;
-        } else { 
+        } else {
             write_f(file, "GPR %d: %08x\t", i, faulting_copy.gpr[i]);
             c++;
         }
@@ -110,7 +110,7 @@ void handle_exception(enum ppc_exception exception) {
     OSResumeThread(&wait_thread);
     OSResumeThread(&dump_thread);
     OSSuspendThread(faulting_thread);
-    
+
 }
 
 void init_hb_exceptions(void) {

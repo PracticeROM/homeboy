@@ -389,7 +389,7 @@ typedef void    (*ex_handler_t)(enum ppc_exception);
 #define cur_thread      (*(thread_context_t**)  cur_thread_addr)
 #define ex_handlers     ((ex_handler_t*)        ex_handlers_addr)
 #define gSystem         (*(gClassSystem_t**)    gSystem_ptr_addr)
-#define n64_cpu         gSystem->cpu    
+#define n64_cpu         gSystem->cpu
 
 #define ios_openasync   ((ios_openasync_t)      ios_openasync_addr)
 #define ios_open        ((ios_open_t)           ios_open_addr)
