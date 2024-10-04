@@ -14,7 +14,7 @@
 
 #define HB_HEAPSIZE         0xD000
 
-ENTRY bool _start(void **dest, size_t size)
+INIT bool _start(void **dest, size_t size)
 {
     if(!ramSetSize(dest, 0x00800000))
     {
@@ -42,7 +42,7 @@ ENTRY bool _start(void **dest, size_t size)
 
     if(hb_hid < 0)
     {
-        hb_hid = ios_create_heap((void*)ios_heap_addr, HB_HEAPSIZE);
+        hb_hid = iosCreateHeap((void*)ios_heap_addr, HB_HEAPSIZE);
     }
 
     if(hb_hid >= 0)

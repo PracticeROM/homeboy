@@ -19,7 +19,7 @@ static hb_dbg_class_t *hb_dbg_obj = NULL;
 
 int hb_debug_event(void *hb_dbg_p, int event, void *arg);
 
-static class_type_t hb_dbg_class = {
+static _XL_OBJECTTYPE hb_dbg_class = {
     "HB-DBG",
     sizeof(hb_dbg_class_t),
     0,
@@ -41,37 +41,37 @@ static void run_cmd(void) {
     }
 }
 
-static bool lb(hb_dbg_class_t *hb_fat, uint32_t addr, uint8_t *dst)
+static bool get8(hb_dbg_class_t *hb_fat, uint32_t addr, uint8_t *dst)
 {
     return false;
 }
 
-static bool lh(hb_dbg_class_t *hb_fat, uint32_t addr, uint16_t *dst)
+static bool get16(hb_dbg_class_t *hb_fat, uint32_t addr, uint16_t *dst)
 {
     return false;
 }
 
-static bool lw(hb_dbg_class_t *hb_fat, uint32_t addr, uint32_t *dst)
+static bool get32(hb_dbg_class_t *hb_fat, uint32_t addr, uint32_t *dst)
 {
     return true;
 }
 
-static bool ld(hb_dbg_class_t *hb_fat, uint32_t addr, uint64_t *dst)
+static bool get64(hb_dbg_class_t *hb_fat, uint32_t addr, uint64_t *dst)
 {
     return false;
 }
 
-static bool sb(hb_dbg_class_t *hb_fat, uint32_t addr, uint8_t *src)
+static bool put8(hb_dbg_class_t *hb_fat, uint32_t addr, uint8_t *src)
 {
     return false;
 }
 
-static bool sh(hb_dbg_class_t *hb_fat, uint32_t addr, uint16_t *src)
+static bool put16(hb_dbg_class_t *hb_fat, uint32_t addr, uint16_t *src)
 {
     return false;
 }
 
-static bool sw(hb_dbg_class_t *hb_fat, uint32_t addr, uint32_t *src)
+static bool put32(hb_dbg_class_t *hb_fat, uint32_t addr, uint32_t *src)
 {
     addr &= 0x7FFF;
     if(addr == 0) {
@@ -81,21 +81,21 @@ static bool sw(hb_dbg_class_t *hb_fat, uint32_t addr, uint32_t *src)
     return true;
 }
 
-static bool sd(hb_dbg_class_t *hb_fat, uint32_t addr, uint64_t *src)
+static bool put64(hb_dbg_class_t *hb_fat, uint32_t addr, uint64_t *src)
 {
     return false;
 }
 
 int hb_debug_event(void *hb_dbg_p, int event, void *arg) {
     if(event == 0x1002) {
-        cpuSetDevicePut(gSystem->cpu, arg, sb, sh, sw, sd);
-        cpuSetDeviceGet(gSystem->cpu, arg, lb, lh, lw, ld);
+        cpuSetDevicePut(SYSTEM_CPU(gpSystem), arg, put8, put16, put32, put64);
+        cpuSetDeviceGet(SYSTEM_CPU(gpSystem), arg, get8, get16, get32, get64);
     }
 }
 
 void homeboy_debug_init(void) {
     xlObjectMake((void**)&hb_dbg_obj, NULL, &hb_dbg_class);
-    cpuMapObject(gSystem->cpu, hb_dbg_obj, 0x805C000, 0x805FFFF, 0);
+    cpuMapObject(SYSTEM_CPU(gpSystem), hb_dbg_obj, 0x805C000, 0x805FFFF, 0);
 }
 
 #endif

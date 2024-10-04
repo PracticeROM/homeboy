@@ -10,11 +10,11 @@
 #ifdef HB_EXCEPTIONS
 
 static int waiting = 1;
-static thread_context_t *faulting_thread = NULL;
-static thread_context_t faulting_copy;
+static OSThread *faulting_thread = NULL;
+static OSThread faulting_copy;
 
-static thread_context_t dump_thread;
-static thread_context_t wait_thread;
+static OSThread dump_thread;
+static OSThread wait_thread;
 static char dump_stack[0x10000];
 static char wait_stack[0x1000];
 
@@ -54,33 +54,33 @@ void *dump_mem_thread(void *arg) {
 
     snprintf(str_buf, sizeof(str_buf), "/hb_%s_crash_details.txt", title_id_buf);
     file = creat(str_buf, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    write_f(file, "Faulting PC: %08x\n", faulting_copy.srr0);
+    write_f(file, "Faulting PC: %08x\n", faulting_copy.context.srr0);
     for(int i = 0, c = 0; i < 32; i++) {
         if(c == 3 || i == 31) {
-            write_f(file, "GPR %d: %08x\n", i, faulting_copy.gpr[i]);
+            write_f(file, "GPR %d: %08x\n", i, faulting_copy.context.gprs[i]);
             c = 0;
         } else {
-            write_f(file, "GPR %d: %08x\t", i, faulting_copy.gpr[i]);
+            write_f(file, "GPR %d: %08x\t", i, faulting_copy.context.gprs[i]);
             c++;
         }
     }
     for(int i = 0, c = 0; i < 32; i++) {
         if(c == 1 || i == 31) {
-            write_f(file, "FPR %d: %016x\n", i, faulting_copy.fpr_64[i]);
+            write_f(file, "FPR %d: %016x\n", i, faulting_copy.context.fprs[i]);
             c = 0;
         } else {
-            write_f(file, "FPR %d: %016x\t", i, faulting_copy.fpr_64[i]);
+            write_f(file, "FPR %d: %016x\t", i, faulting_copy.context.fprs[i]);
             c++;
         }
     }
 
-    write_f(file, "CR: %08x\n", faulting_copy.cr);
-    write_f(file, "LR: %08x\n", faulting_copy.lr);
-    write_f(file, "CTR: %08x\n", faulting_copy.ctr);
-    write_f(file, "XER: %08x\n", faulting_copy.xer);
-    write_f(file, "FSCR: %016x\n", faulting_copy.fscr);
-    write_f(file, "SRR0: %08x\n", faulting_copy.srr0);
-    write_f(file, "SRR1: %08x\n", faulting_copy.srr1);
+    write_f(file, "CR: %08x\n", faulting_copy.context.cr);
+    write_f(file, "LR: %08x\n", faulting_copy.context.lr);
+    write_f(file, "CTR: %08x\n", faulting_copy.context.ctr);
+    write_f(file, "XER: %08x\n", faulting_copy.context.xer);
+    write_f(file, "FSCR: %016x\n", faulting_copy.context.fpscr_pad);
+    write_f(file, "SRR0: %08x\n", faulting_copy.context.srr0);
+    write_f(file, "SRR1: %08x\n", faulting_copy.context.srr1);
 
     close(file);
 
@@ -102,7 +102,7 @@ void *dump_mem_thread(void *arg) {
 }
 
 void handle_exception(enum ppc_exception exception) {
-    faulting_thread = (thread_context_t*)MEM_PHYSICAL_TO_K0(cur_thread);
+    faulting_thread = (OSThread*)OSPhysicalToCached(cur_thread);
     faulting_copy = *faulting_thread;
 
     OSCreateThread(&dump_thread, dump_mem_thread, NULL, dump_stack + sizeof(dump_stack), sizeof(dump_stack), 30, 0);

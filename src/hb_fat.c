@@ -105,7 +105,7 @@ static hb_fat_class_t *hb_fat_obj = NULL;
 
 int hb_fat_event(void *hb_fat_p, int event, void *arg);
 
-static class_type_t hb_fat_class = {
+static _XL_OBJECTTYPE hb_fat_class = {
     "HB-FAT",
     sizeof(hb_fat_class_t),
     0,
@@ -219,38 +219,38 @@ void run_command()
     hb_fat_obj->err = errno;
 }
 
-static bool lb(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *dst)
+static bool get8(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *dst)
 {
     return false;
 }
 
-static bool lh(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *dst)
+static bool get16(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *dst)
 {
     return false;
 }
 
-static bool lw(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *dst)
+static bool get32(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *dst)
 {
     *dst = hb_fat_obj->regs[(addr & 0x7FFF) >> 2];
     return true;
 }
 
-static bool ld(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *dst)
+static bool get64(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *dst)
 {
     return false;
 }
 
-static bool sb(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *src)
+static bool put8(hb_fat_class_t *hb_fat, uint32_t addr, uint8_t *src)
 {
     return false;
 }
 
-static bool sh(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *src)
+static bool put16(hb_fat_class_t *hb_fat, uint32_t addr, uint16_t *src)
 {
     return false;
 }
 
-static bool sw(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *src)
+static bool put32(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *src)
 {
     addr &= 0x7FFF;
     hb_fat->regs[addr >> 2] = *src;
@@ -261,7 +261,7 @@ static bool sw(hb_fat_class_t *hb_fat, uint32_t addr, uint32_t *src)
     return true;
 }
 
-static bool sd(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *src)
+static bool put64(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *src)
 {
     return false;
 }
@@ -269,15 +269,15 @@ static bool sd(hb_fat_class_t *hb_fat, uint32_t addr, uint64_t *src)
 int hb_fat_event(void *hb_fat_p, int event, void *arg){
     if(event == 0x1002)
     {
-        cpuSetDevicePut(gSystem->cpu, arg, sb, sh, sw, sd);
-        cpuSetDeviceGet(gSystem->cpu, arg, lb, lh, lw, ld);
+        cpuSetDevicePut(SYSTEM_CPU(gpSystem), arg, put8, put16, put32, put64);
+        cpuSetDeviceGet(SYSTEM_CPU(gpSystem), arg, get8, get16, get32, get64);
     }
 }
 
 void homeboy_fat_init(void)
 {
     xlObjectMake((void**)&hb_fat_obj, NULL, &hb_fat_class);
-    cpuMapObject(gSystem->cpu, hb_fat_obj, 0x9060000, 0x9063FFF, 0);
+    cpuMapObject(SYSTEM_CPU(gpSystem), hb_fat_obj, 0x9060000, 0x9063FFF, 0);
 }
 
 #endif

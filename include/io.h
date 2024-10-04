@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
-typedef struct
-{
-    void       *data;
-    uint32_t    len;
-} ioctlv;
+// ipcclt.h
+typedef struct IPCIOVector {
+    /* 0x0 */ void* base;
+    /* 0x4 */ uint32_t length;
+} IPCIOVector;
 
 #endif

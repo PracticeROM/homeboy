@@ -17,7 +17,7 @@ char dram_fn[64];
 
 int homeboy_event(void *regs, int event, void *arg);
 
-static class_type_t homeboy_class =
+static _XL_OBJECTTYPE homeboy_class =
 {
     "HOMEBOY",
     sizeof(hb_sd_regs_t),
@@ -116,7 +116,7 @@ static void do_read()
 #define ADDR_OFFSET 0x100A0000
 #endif
 
-bool lb(hb_sd_regs_t *hb_regs, uint32_t addr, uint8_t *dest)
+bool get8(hb_sd_regs_t *hb_regs, uint32_t addr, uint8_t *dest)
 {
     addr -= ADDR_OFFSET;
     *dest = (uint8_t)hb_regs->regs[addr >> 2];
@@ -124,7 +124,7 @@ bool lb(hb_sd_regs_t *hb_regs, uint32_t addr, uint8_t *dest)
     return true;
 }
 
-bool lh(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *dest)
+bool get16(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *dest)
 {
     addr -= ADDR_OFFSET;
     *dest = (uint16_t)hb_regs->regs[addr >> 2];
@@ -132,7 +132,7 @@ bool lh(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *dest)
     return true;
 }
 
-bool lw(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *dest)
+bool get32(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *dest)
 {
     addr -= ADDR_OFFSET;
 
@@ -151,14 +151,14 @@ bool lw(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *dest)
     return true;
 }
 
-bool ld(hb_sd_regs_t *hb_regs, uint32_t addr, uint64_t *dest)
+bool get64(hb_sd_regs_t *hb_regs, uint32_t addr, uint64_t *dest)
 {
     addr -= ADDR_OFFSET;
     *dest = (uint64_t)homeboy_obj->regs[addr >> 2];
     return true;
 }
 
-bool sb(hb_sd_regs_t *hb_regs, uint32_t addr, uint8_t *src)
+bool put8(hb_sd_regs_t *hb_regs, uint32_t addr, uint8_t *src)
 {
     addr -= ADDR_OFFSET;
     hb_regs->regs[addr >> 2] = *src;
@@ -166,7 +166,7 @@ bool sb(hb_sd_regs_t *hb_regs, uint32_t addr, uint8_t *src)
     return true;
 }
 
-bool sh(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *src)
+bool put16(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *src)
 {
     addr -= ADDR_OFFSET;
     hb_regs->regs[addr >> 2] = *src;
@@ -174,7 +174,7 @@ bool sh(hb_sd_regs_t *hb_regs, uint32_t addr, uint16_t *src)
     return true;
 }
 
-bool sw(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *src)
+bool put32(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *src)
 {
     addr -= ADDR_OFFSET;
 
@@ -196,7 +196,7 @@ bool sw(hb_sd_regs_t *hb_regs, uint32_t addr, uint32_t *src)
     return true;
 }
 
-bool sd(hb_sd_regs_t *hb_regs, uint32_t addr, uint64_t *src)
+bool put64(hb_sd_regs_t *hb_regs, uint32_t addr, uint64_t *src)
 {
     addr -= ADDR_OFFSET;
     uint32_t *src32 = (uint32_t*)src;
@@ -210,13 +210,13 @@ int homeboy_event(void *regs, int event, void *arg)
 {
     if(event == 0x1002)
     {
-        cpuSetDevicePut(gSystem->cpu, arg, sb, sh, sw, sd);
-        cpuSetDeviceGet(gSystem->cpu, arg, lb, lh, lw, ld);
+        cpuSetDevicePut(SYSTEM_CPU(gpSystem), arg, put8, put16, put32, put64);
+        cpuSetDeviceGet(SYSTEM_CPU(gpSystem), arg, get8, get16, get32, get64);
     }
 }
 
 void homeboy_init(void)
 {
     xlObjectMake((void**)&homeboy_obj, NULL, &homeboy_class);
-    cpuMapObject(gSystem->cpu, homeboy_obj, 0x08050000, 0x08057FFF, 0);
+    cpuMapObject(SYSTEM_CPU(gpSystem), homeboy_obj, 0x08050000, 0x08057FFF, 0);
 }
