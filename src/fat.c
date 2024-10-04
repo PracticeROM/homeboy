@@ -8,6 +8,8 @@
 #include "sd.h"
 #include "vc.h"
 
+#if HB_FAT
+
 enum sfn_case{
     SFN_CASE_ANY,
     SFN_CASE_LOWER,
@@ -1886,3 +1888,5 @@ int fat_init(fat_ctxt_t *fat){
     }
     return 0;
 }
+
+#endif

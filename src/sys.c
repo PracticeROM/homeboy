@@ -9,6 +9,8 @@
 #include "sd.h"
 #include "vc.h"
 
+#if HB_FAT
+
 typedef struct {
     int         descriptor;
     fat_path_t *fp;
@@ -759,3 +761,5 @@ static int _err = 0;
 int *__errno() {
     return &_err;
 }
+
+#endif

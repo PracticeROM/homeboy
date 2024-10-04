@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <string.h>
 #include "fs.h"
 #include "hb_debug.h"
 #include "hb_heap.h"
@@ -52,8 +52,16 @@ ENTRY bool _start(void **dest, size_t size)
 
     fs_init();
 
+    char title_id_str[9];
+    for (int i = 0; i < 8; i++) {
+        int digit = (title_id >> (28 - i * 4)) & 0xF;
+        title_id_str[i] = digit < 10 ? '0' + digit : 'a' + digit - 10;
+    }
+    title_id_str[8] = '\0';
 
-    sprintf(dram_fn, "/title/00010001/%8x/data/dram_save", title_id);
+    strcat(dram_fn, "/title/00010001/");
+    strcat(dram_fn, title_id_str);
+    strcat(dram_fn, "/data/dram_save");
 
     // Check if a dram restore needs to be done.
     int fd = fs_open(dram_fn,1);

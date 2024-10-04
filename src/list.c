@@ -8,6 +8,8 @@
 #include "vc.h"
 #include "list.h"
 
+#if HB_FAT
+
 struct list_element_header
 {
   struct list_element_header *prev, *next;
@@ -262,4 +264,6 @@ void list_destroy(struct list *list)
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
