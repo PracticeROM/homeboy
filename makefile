@@ -55,7 +55,7 @@ $$(SOBJ-$(1))		: $$(OBJDIR-$(1))/%.o: $$(SRCDIR-$(1))/% | $$(OBJDIR-$(1))
 $$(RESOBJ-$(1))		: $$(OBJDIR-$(1))/%.o: $$(RESDIR-$(1))/% | $$(OBJDIR-$(1))
 	$(GRC) $$< -d $(RESDESC) -o $$@
 $$(ELF-$(1))      : $$(COBJ-$(1)) $$(SOBJ-$(1)) | $$(BINDIR-$(1))
-	$(LD) $$(ALL_LDFLAGS) $$^ -o $$@
+	$(LD) $$(ALL_LDFLAGS) -Wl,-Map=$${@:.elf=.map} $$^ -o $$@
 $$(BIN-$(1))      : $$(ELF-$(1)) | $$(BINDIR-$(1))
 	$(OBJCOPY) $$(ALL_OBJCOPYFLAGS) $$< $$@
 $$(OUTDIR-$(1))   :
