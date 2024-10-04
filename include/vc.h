@@ -241,7 +241,7 @@ struct thread_context_s {
 #define xlHeapTake_addr         0x800810f8
 #define heap_size_hook_addr     0x8008A164
 #define reset_flag_addr         0x8025D0EC
-#define gSystem_ptr_addr        0x8020f1f8
+#define gSystem_ptr_addr        0x8025CFE0
 #define N64_DRAM_SIZE           0x00800000
 #define cpuMapObject_addr       0x8003c614
 #define xlObjectMake_addr       0x800821f4
@@ -274,7 +274,7 @@ struct thread_context_s {
 #define xlHeapTake_addr         0x80081104
 #define heap_size_hook_addr     0x8008a170
 #define reset_flag_addr         0x8025D1EC
-#define gSystem_ptr_addr        0x8020f2f8
+#define gSystem_ptr_addr        0x8025D0E0
 #define N64_DRAM_SIZE           0x00800000
 #define cpuMapObject_addr       0x8003c630
 #define xlObjectMake_addr       0x80082200
