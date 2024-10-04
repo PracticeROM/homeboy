@@ -39,6 +39,7 @@ enum fat_cache_type {
     FAT_CACHE_MAX
 };
 
+// clang-format off
 typedef struct {
     /* 0x000 */ _Bool valid;
     /* 0x001 */ _Bool dirty;
@@ -46,9 +47,10 @@ typedef struct {
     /* 0x008 */ uint32_t load_lba;
     /* 0x00C */ uint32_t prep_lba;
     /* 0x010 */ int sector_cnt;
-    _Alignas(0x10);
+    _Alignas(0x10)
     /* 0x020 */ char data[0x800];
 } fat_cache_t; // size = 0x820
+// clang-format on
 
 typedef struct {
     /* 0x0000 */ enum fat_type type;

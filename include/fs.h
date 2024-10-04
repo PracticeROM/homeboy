@@ -3,6 +3,8 @@
 
 #include "homeboy.h"
 #include "io.h"
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define FS_ERROR_EACCES -1
