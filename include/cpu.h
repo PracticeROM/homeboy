@@ -1,22 +1,31 @@
 #ifndef _CPU_H
 #define _CPU_H
 
-#include "version.h"
 #include <stdint.h>
+
+#include "version.h"
 
 // os.h
 #define OS_CACHED_REGION_PREFIX 0x8000
-#define OS_BASE_CACHED (OS_CACHED_REGION_PREFIX << 16)
+#define OS_BASE_CACHED          (OS_CACHED_REGION_PREFIX << 16)
 
 // OSAddress.h
-static inline void* OSPhysicalToCached(uint32_t ofs) { return (void*)(ofs + OS_BASE_CACHED); }
+static inline void* OSPhysicalToCached(uint32_t ofs) {
+    return (void*)(ofs + OS_BASE_CACHED);
+}
 
 inline uint64_t gettick() {
     register uint32_t tbu;
     register uint32_t tbl;
-    __asm__ __volatile__("mftbl %0\n"
-                         "mftbu %1\n" ::"r"(tbl),
-                         "r"(tbu));
+
+    // clang-format off
+        __asm__ __volatile__(
+            "mftbl %0\n"
+            "mftbu %1\n"
+            ::
+            "r"(tbl), "r"(tbu));
+    // clang-format on
+
     return (uint64_t)((uint64_t)tbu << 32 | tbl);
 }
 
@@ -364,10 +373,10 @@ struct Cpu {
         uint64_t gpr64[32];
         uint32_t gpr[64];
     };
-    union {
+    /* 0x00158 */ union {
         double fpr64[32];
         float fpr[64];
-    }; /* 0x00158 */
+    };
     /* 0x00258 */ char unk_0x258[0x780];
     /* 0x009D8 */ uint32_t FSCR[32];
     /* 0x00A58 */ uint32_t cp0[64];

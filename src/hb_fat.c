@@ -1,10 +1,11 @@
+#include <errno.h>
+#include <stdint.h>
+#include <sys/stat.h>
+
 #include "hb_heap.h"
 #include "homeboy.h"
 #include "sys.h"
 #include "vc.h"
-#include <errno.h>
-#include <stdint.h>
-#include <sys/stat.h>
 
 #if HB_FAT
 
@@ -105,7 +106,12 @@ static hb_fat_class_t* hb_fat_obj = NULL;
 
 int hb_fat_event(void* hb_fat_p, int event, void* arg);
 
-static _XL_OBJECTTYPE hb_fat_class = {"HB-FAT", sizeof(hb_fat_class_t), 0, hb_fat_event};
+static _XL_OBJECTTYPE hb_fat_class = {
+    "HB-FAT",
+    sizeof(hb_fat_class_t),
+    0,
+    hb_fat_event,
+};
 
 void run_command() {
     switch (hb_fat_obj->command) {
@@ -200,20 +206,30 @@ void run_command() {
     hb_fat_obj->err = errno;
 }
 
-static bool get8(hb_fat_class_t* hb_fat, uint32_t addr, uint8_t* dst) { return false; }
+static bool get8(hb_fat_class_t* hb_fat, uint32_t addr, uint8_t* dst) {
+    return false;
+}
 
-static bool get16(hb_fat_class_t* hb_fat, uint32_t addr, uint16_t* dst) { return false; }
+static bool get16(hb_fat_class_t* hb_fat, uint32_t addr, uint16_t* dst) {
+    return false;
+}
 
 static bool get32(hb_fat_class_t* hb_fat, uint32_t addr, uint32_t* dst) {
     *dst = hb_fat_obj->regs[(addr & 0x7FFF) >> 2];
     return true;
 }
 
-static bool get64(hb_fat_class_t* hb_fat, uint32_t addr, uint64_t* dst) { return false; }
+static bool get64(hb_fat_class_t* hb_fat, uint32_t addr, uint64_t* dst) {
+    return false;
+}
 
-static bool put8(hb_fat_class_t* hb_fat, uint32_t addr, uint8_t* src) { return false; }
+static bool put8(hb_fat_class_t* hb_fat, uint32_t addr, uint8_t* src) {
+    return false;
+}
 
-static bool put16(hb_fat_class_t* hb_fat, uint32_t addr, uint16_t* src) { return false; }
+static bool put16(hb_fat_class_t* hb_fat, uint32_t addr, uint16_t* src) {
+    return false;
+}
 
 static bool put32(hb_fat_class_t* hb_fat, uint32_t addr, uint32_t* src) {
     addr &= 0x7FFF;
@@ -224,7 +240,9 @@ static bool put32(hb_fat_class_t* hb_fat, uint32_t addr, uint32_t* src) {
     return true;
 }
 
-static bool put64(hb_fat_class_t* hb_fat, uint32_t addr, uint64_t* src) { return false; }
+static bool put64(hb_fat_class_t* hb_fat, uint32_t addr, uint64_t* src) {
+    return false;
+}
 
 int hb_fat_event(void* hb_fat_p, int event, void* arg) {
     if (event == 0x1002) {

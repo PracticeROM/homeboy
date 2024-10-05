@@ -1,13 +1,19 @@
-#include "hb_n64vcmem.h"
-#include "homeboy.h"
 #include <stdbool.h>
 #include <stddef.h>
+
+#include "hb_n64vcmem.h"
+#include "homeboy.h"
 
 #if HB_N64VCMEM
 static void* hb_n64vcmem_dummy = NULL;
 int hb_n64vcmem_event(void* dummy_p, int event, void* arg);
 
-static _XL_OBJECTTYPE hb_n64vcmem_class = {"HB-N64VCMEM", sizeof(void*), 0, hb_n64vcmem_event};
+static _XL_OBJECTTYPE hb_n64vcmem_class = {
+    "HB-N64VCMEM",
+    sizeof(void*),
+    0,
+    hb_n64vcmem_event,
+};
 
 static bool n64vcmem_get8(void* callback, uint32_t addr, uint8_t* dest) {
     addr -= 0x110C0000;

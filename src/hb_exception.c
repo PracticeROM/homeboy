@@ -1,11 +1,12 @@
-#include "hb_exception.h"
+#include <string.h>
+#include <sys/stat.h>
+
 #include "cpu.h"
+#include "hb_exception.h"
 #include "hb_heap.h"
 #include "stdio.h"
 #include "sys.h"
 #include "vc.h"
-#include <string.h>
-#include <sys/stat.h>
 
 #ifdef HB_EXCEPTIONS
 
@@ -121,8 +122,10 @@ void init_hb_exceptions(void) {
 }
 
 #else
-void handle_exception(enum ppc_exception exception) {}
+void handle_exception(enum ppc_exception exception) {
+}
 
-void init_hb_exceptions(void) {}
+void init_hb_exceptions(void) {
+}
 
 #endif

@@ -1,3 +1,8 @@
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+
 #include "fs.h"
 #include "hb_debug.h"
 #include "hb_exception.h"
@@ -7,10 +12,6 @@
 #include "homeboy.h"
 #include "sys.h"
 #include "vc.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 
 #define HB_HEAPSIZE 0xD000
 

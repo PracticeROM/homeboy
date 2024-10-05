@@ -1,10 +1,11 @@
-#include "sd.h"
-#include "homeboy.h"
-#include "io.h"
-#include "vc.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+
+#include "homeboy.h"
+#include "io.h"
+#include "sd.h"
+#include "vc.h"
 
 typedef struct {
     uint32_t cmd;
@@ -612,10 +613,14 @@ bool sdio_write_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer) {
     return !(ret < 0);
 }
 
-bool sdio_is_inserted(void) { return ((sdio_getstatus() & SDIO_STATUS_CARD_INSERTED) == SDIO_STATUS_CARD_INSERTED); }
+bool sdio_is_inserted(void) {
+    return ((sdio_getstatus() & SDIO_STATUS_CARD_INSERTED) == SDIO_STATUS_CARD_INSERTED);
+}
 
 bool sdio_is_initialized(void) {
     return ((sdio_getstatus() & SDIO_STATUS_CARD_INITIALIZED) == SDIO_STATUS_CARD_INITIALIZED);
 }
 
-bool sdio_is_sdhc(void) { return sd0_sdhc; }
+bool sdio_is_sdhc(void) {
+    return sd0_sdhc;
+}

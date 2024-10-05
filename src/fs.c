@@ -9,48 +9,47 @@
 #include "vc.h"
 
 typedef struct {
-    char filepath[64]; /* 0x0000 */
-    union {
-        struct {
-            char filepath_old[64]; /* 0x0000 */
-            char filepath_new[64]; /* 0x0040 */
-        } fsrename; /* 0x0080 */
-        struct {
-            uint32_t owner_id; /* 0x0000 */
-            uint16_t group_id; /* 0x0004 */
-            char filepath[64]; /* 0x0006 */
-            uint8_t ownerperm; /* 0x0046 */
-            uint8_t groupperm; /* 0x0047 */
-            uint8_t otherperm; /* 0x0048 */
-            uint8_t attributes; /* 0x0049 */
-            uint8_t pad0[2]; /* 0x004A */
-        } fsattr; /* 0x004C */
-        struct {
-            IPCIOVector vector[4]; /* 0x0000 */
-            uint32_t entry_cnt; /* 0x0020 */
-        } fsreaddir; /* 0x0024 */
-        struct {
-            IPCIOVector vector[4]; /* 0x0000 */
-            uint32_t usage1; /* 0x0020 */
-            uint8_t pad0[28]; /* 0x0024 */
-            uint32_t usage2; /* 0x0040 */
-        } fsusage; /* 0x0044 */
-        struct {
-            uint32_t a; /* 0x0000 */
-            uint32_t b; /* 0x0004 */
-            uint32_t c; /* 0x0008 */
-            uint32_t d; /* 0x000C */
-            uint32_t e; /* 0x0010 */
-            uint32_t f; /* 0x0014 */
-            uint32_t g; /* 0x0018 */
-        } fsstats; /* 0x001C */
-    }; /* 0x0040 */
-
-    void* callback; /* 0x00C0 */
-    void* callback_data; /* 0x00C4 */
-    uint32_t functype; /* 0x00C8 */
-    void* funcargv[8]; /* 0x00CC */
-} isfs_t; /* 0x00EC */
+    /* 0x0000 */ char filepath[64];
+    /* 0x0040 */ union {
+        /* 0x0080 */ struct {
+            /* 0x0000 */ char filepath_old[64];
+            /* 0x0040 */ char filepath_new[64];
+        } fsrename;
+        /* 0x004C */ struct {
+            /* 0x0000 */ uint32_t owner_id;
+            /* 0x0004 */ uint16_t group_id;
+            /* 0x0006 */ char filepath[64];
+            /* 0x0046 */ uint8_t ownerperm;
+            /* 0x0047 */ uint8_t groupperm;
+            /* 0x0048 */ uint8_t otherperm;
+            /* 0x0049 */ uint8_t attributes;
+            /* 0x004A */ uint8_t pad0[2];
+        } fsattr;
+        /* 0x0024 */ struct {
+            /* 0x0000 */ IPCIOVector vector[4];
+            /* 0x0020 */ uint32_t entry_cnt;
+        } fsreaddir;
+        /* 0x0044 */ struct {
+            /* 0x0000 */ IPCIOVector vector[4];
+            /* 0x0020 */ uint32_t usage1;
+            /* 0x0024 */ uint8_t pad0[28];
+            /* 0x0040 */ uint32_t usage2;
+        } fsusage;
+        /* 0x001C */ struct {
+            /* 0x0000 */ uint32_t a;
+            /* 0x0004 */ uint32_t b;
+            /* 0x0008 */ uint32_t c;
+            /* 0x000C */ uint32_t d;
+            /* 0x0010 */ uint32_t e;
+            /* 0x0014 */ uint32_t f;
+            /* 0x0018 */ uint32_t g;
+        } fsstats;
+    };
+    /* 0x00C0 */ void* callback;
+    /* 0x00C4 */ void* callback_data;
+    /* 0x00C8 */ uint32_t functype;
+    /* 0x00CC */ void* funcargv[8];
+} isfs_t; // size = 0xEC
 
 const char* fspath = "/dev/fs";
 static int fs_fd = -1;
@@ -115,7 +114,9 @@ int fs_write(int fd, void* buf, size_t len) {
     return ret;
 }
 
-int fs_close(int fd) { return IOS_Close(fd); }
+int fs_close(int fd) {
+    return IOS_Close(fd);
+}
 
 int fs_create(char* path, int mode) {
     int fd = -1;

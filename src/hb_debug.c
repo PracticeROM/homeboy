@@ -1,9 +1,10 @@
+#include <sys/stat.h>
+
 #include "hb_debug.h"
 #include "hb_heap.h"
 #include "homeboy.h"
 #include "sys.h"
 #include "vc.h"
-#include <sys/stat.h>
 
 #ifdef HB_DBG
 
@@ -19,7 +20,12 @@ static hb_dbg_class_t* hb_dbg_obj = NULL;
 
 int hb_debug_event(void* hb_dbg_p, int event, void* arg);
 
-static _XL_OBJECTTYPE hb_dbg_class = {"HB-DBG", sizeof(hb_dbg_class_t), 0, hb_debug_event};
+static _XL_OBJECTTYPE hb_dbg_class = {
+    "HB-DBG",
+    sizeof(hb_dbg_class_t),
+    0,
+    hb_debug_event,
+};
 
 static void run_cmd(void) {
     switch (hb_dbg_obj->dbg_cmd) {
@@ -34,17 +40,29 @@ static void run_cmd(void) {
     }
 }
 
-static bool get8(hb_dbg_class_t* hb_fat, uint32_t addr, uint8_t* dst) { return false; }
+static bool get8(hb_dbg_class_t* hb_fat, uint32_t addr, uint8_t* dst) {
+    return false;
+}
 
-static bool get16(hb_dbg_class_t* hb_fat, uint32_t addr, uint16_t* dst) { return false; }
+static bool get16(hb_dbg_class_t* hb_fat, uint32_t addr, uint16_t* dst) {
+    return false;
+}
 
-static bool get32(hb_dbg_class_t* hb_fat, uint32_t addr, uint32_t* dst) { return true; }
+static bool get32(hb_dbg_class_t* hb_fat, uint32_t addr, uint32_t* dst) {
+    return true;
+}
 
-static bool get64(hb_dbg_class_t* hb_fat, uint32_t addr, uint64_t* dst) { return false; }
+static bool get64(hb_dbg_class_t* hb_fat, uint32_t addr, uint64_t* dst) {
+    return false;
+}
 
-static bool put8(hb_dbg_class_t* hb_fat, uint32_t addr, uint8_t* src) { return false; }
+static bool put8(hb_dbg_class_t* hb_fat, uint32_t addr, uint8_t* src) {
+    return false;
+}
 
-static bool put16(hb_dbg_class_t* hb_fat, uint32_t addr, uint16_t* src) { return false; }
+static bool put16(hb_dbg_class_t* hb_fat, uint32_t addr, uint16_t* src) {
+    return false;
+}
 
 static bool put32(hb_dbg_class_t* hb_fat, uint32_t addr, uint32_t* src) {
     addr &= 0x7FFF;
@@ -55,7 +73,9 @@ static bool put32(hb_dbg_class_t* hb_fat, uint32_t addr, uint32_t* src) {
     return true;
 }
 
-static bool put64(hb_dbg_class_t* hb_fat, uint32_t addr, uint64_t* src) { return false; }
+static bool put64(hb_dbg_class_t* hb_fat, uint32_t addr, uint64_t* src) {
+    return false;
+}
 
 int hb_debug_event(void* hb_dbg_p, int event, void* arg) {
     if (event == 0x1002) {

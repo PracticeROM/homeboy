@@ -17,7 +17,12 @@ char dram_fn[64];
 
 int homeboy_event(void* regs, int event, void* arg);
 
-static _XL_OBJECTTYPE homeboy_class = {"HOMEBOY", sizeof(hb_sd_regs_t), 0, homeboy_event};
+static _XL_OBJECTTYPE homeboy_class = {
+    "HOMEBOY",
+    sizeof(hb_sd_regs_t),
+    0,
+    homeboy_event,
+};
 
 static void do_write() {
     homeboy_obj->ready = 0;

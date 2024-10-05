@@ -361,7 +361,9 @@ static void set_word(void* buf, uint32_t offset, size_t len, uint32_t value) {
     }
 }
 
-static void cache_dirty(fat_ctxt_t* fat, enum fat_cache_type type) { fat->cache[type].dirty = 1; }
+static void cache_dirty(fat_ctxt_t* fat, enum fat_cache_type type) {
+    fat->cache[type].dirty = 1;
+}
 
 static int cache_flush(fat_ctxt_t* fat, enum fat_cache_type type) {
     fat_cache_t* cache = &fat->cache[type];
@@ -448,7 +450,9 @@ static void cache_write(fat_ctxt_t* fat, int index, uint32_t offset, const void*
     cache->dirty = 1;
 }
 
-static void cache_invalidate(fat_ctxt_t* fat, int index) { fat->cache[index].valid = 0; }
+static void cache_invalidate(fat_ctxt_t* fat, int index) {
+    fat->cache[index].valid = 0;
+}
 
 static void* file_data(fat_file_t* file) {
     fat_ctxt_t* fat = file->fat_ctxt;

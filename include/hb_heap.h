@@ -1,8 +1,9 @@
 #ifndef _HB_HEAP_H
 #define _HB_HEAP_H
 
-#include "vc.h"
 #include <stddef.h>
+
+#include "vc.h"
 
 #define HB_HEAP_START 0xA8060000
 

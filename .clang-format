@@ -18,8 +18,10 @@ AllowShortBlocksOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 AlignEscapedNewlines: Left
 AlignTrailingComments: false
 SortIncludes: true
+AlignConsecutiveMacros: true
+AlignConsecutiveBitFields: true

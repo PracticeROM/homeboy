@@ -14,14 +14,14 @@ typedef union {
         uint32_t block_cnt;
         union {
             struct {
-                uint32_t : 22;
-                uint32_t reset : 1;
-                uint32_t error : 4;
+                uint32_t            : 22;
+                uint32_t reset      : 1;
+                uint32_t error      : 4;
                 uint32_t initialize : 1;
-                uint32_t sdhc : 1;
-                uint32_t inserted : 1;
-                uint32_t busy : 1;
-                uint32_t ready : 1;
+                uint32_t sdhc       : 1;
+                uint32_t inserted   : 1;
+                uint32_t busy       : 1;
+                uint32_t ready      : 1;
             };
             uint32_t status;
         };

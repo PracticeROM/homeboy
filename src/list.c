@@ -2,11 +2,12 @@
  * -glank
  */
 
-#include "list.h"
-#include "vc.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "list.h"
+#include "vc.h"
 
 #if HB_FAT
 
@@ -14,7 +15,7 @@ struct list_element_header {
     struct list_element_header *prev, *next;
 };
 
-#define MAX_ALIGN(N) (((N) + _Alignof(max_align_t) - 1) & ~(_Alignof(max_align_t) - 1))
+#define MAX_ALIGN(N)        (((N) + _Alignof(max_align_t) - 1) & ~(_Alignof(max_align_t) - 1))
 #define ELEMENT_HEADER_SIZE (MAX_ALIGN(sizeof(struct list_element_header)))
 
 #ifdef __cplusplus

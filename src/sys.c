@@ -227,7 +227,9 @@ int close(int file) {
     return fat_flush(&fat);
 }
 
-int creat(const char* path, mode_t mode) { return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode); }
+int creat(const char* path, mode_t mode) {
+    return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+}
 
 int open(const char* path, int open_flags, ...) {
     if (init_fat()) {
@@ -743,10 +745,14 @@ int stat(const char* path, struct stat* buf) {
     return 0;
 }
 
-int lstat(const char* path, struct stat* buf) { return stat(path, buf); }
+int lstat(const char* path, struct stat* buf) {
+    return stat(path, buf);
+}
 
 static int _err = 0;
 
-int* __errno() { return &_err; }
+int* __errno() {
+    return &_err;
+}
 
 #endif

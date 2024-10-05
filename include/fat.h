@@ -7,20 +7,21 @@
 #ifndef _FAT_H
 #define _FAT_H
 
-#include "list.h"
 #include <stdint.h>
 #include <time.h>
 
+#include "list.h"
+
 #define FAT_MAX_CACHE_SECTOR 4
 
-#define FAT_ATTRIBUTE_DEFAULT 0x00
-#define FAT_ATTRIBUTE_READONLY 0x01
-#define FAT_ATTRIBUTE_HIDDEN 0x02
-#define FAT_ATTRIBUTE_SYSTEM 0x04
-#define FAT_ATTRIBUTE_LABEL 0x08
+#define FAT_ATTRIBUTE_DEFAULT   0x00
+#define FAT_ATTRIBUTE_READONLY  0x01
+#define FAT_ATTRIBUTE_HIDDEN    0x02
+#define FAT_ATTRIBUTE_SYSTEM    0x04
+#define FAT_ATTRIBUTE_LABEL     0x08
 #define FAT_ATTRIBUTE_DIRECTORY 0x10
-#define FAT_ATTRIBUTE_ARCHIVE 0x20
-#define FAT_ATTRIBUTE_DEVICE 0x40
+#define FAT_ATTRIBUTE_ARCHIVE   0x20
+#define FAT_ATTRIBUTE_DEVICE    0x40
 
 enum fat_io {
     FAT_READ,
@@ -39,7 +40,6 @@ enum fat_cache_type {
     FAT_CACHE_MAX
 };
 
-// clang-format off
 typedef struct {
     /* 0x000 */ _Bool valid;
     /* 0x001 */ _Bool dirty;
@@ -47,10 +47,8 @@ typedef struct {
     /* 0x008 */ uint32_t load_lba;
     /* 0x00C */ uint32_t prep_lba;
     /* 0x010 */ int sector_cnt;
-    _Alignas(0x10)
-    /* 0x020 */ char data[0x800];
+    /* 0x020 */ _Alignas(0x10) char data[0x800];
 } fat_cache_t; // size = 0x820
-// clang-format on
 
 typedef struct {
     /* 0x0000 */ enum fat_type type;

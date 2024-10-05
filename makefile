@@ -29,7 +29,7 @@ all         : $(HOMEBOY)
 clean       :
 	rm -rf $(OBJDIR) $(BINDIR)
 
-format:
+format      :
 	find include src -name '*.h' -o -name '*.c' | xargs clang-format -i
 
 .PHONY      : all clean format
