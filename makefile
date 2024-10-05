@@ -11,7 +11,7 @@ VC_VERSIONS = NACJ NACE NARJ NARE
 NAME        = homeboy
 RESDESC     = res.json
 
-ADDRESS             = 0x90000800
+ADDRESS             = 0x817F8000
 ALL_CFLAGS          = -c -Iinclude -mcpu=750 -meabi -mhard-float -G 0 -O3 -ffunction-sections -fdata-sections $(CFLAGS)
 ALL_CPPFLAGS        = $(CPPFLAGS)
 ALL_LDFLAGS         = -T build.ld -G 0 -nostartfiles -specs=nosys.specs -Wl,--gc-sections,--section-start,.init=$(ADDRESS) $(LDFLAGS)
@@ -34,6 +34,7 @@ define bin_template
 SRCDIR-$(1)      = src
 OBJDIR-$(1)      = obj/$(1)
 BINDIR-$(1)      = bin/$(1)
+SYMS-$(1)        = lib/$(1).txt
 CSRC-$(1)       := $$(foreach s,$$(CFILES),$$(wildcard $$(SRCDIR-$(1))/$$(s)))
 SSRC-$(1)       := $$(foreach s,$$(SFILES),$$(wildcard $$(SRCDIR-$(1))/$$(s)))
 COBJ-$(1)        = $$(patsubst $$(SRCDIR-$(1))/%,$$(OBJDIR-$(1))/%.o,$$(CSRC-$(1)))
@@ -55,8 +56,8 @@ $$(SOBJ-$(1))     : $$(OBJDIR-$(1))/%.o: $$(SRCDIR-$(1))/% | $$(OBJDIR-$(1))
 	$(AS) -c -mregnames $$(ALL_CPPFLAGS) $$< -o $$@
 $$(RESOBJ-$(1))   : $$(OBJDIR-$(1))/%.o: $$(RESDIR-$(1))/% | $$(OBJDIR-$(1))
 	$(GRC) $$< -d $(RESDESC) -o $$@
-$$(ELF-$(1))      : $$(COBJ-$(1)) $$(SOBJ-$(1)) | $$(BINDIR-$(1))
-	$(LD) $$(ALL_LDFLAGS) -Wl,-Map=$${@:.elf=.map} $$^ -o $$@
+$$(ELF-$(1))      : $$(COBJ-$(1)) $$(SOBJ-$(1)) $$(SYMS-$(1)) | $$(BINDIR-$(1))
+	$(LD) $$(ALL_LDFLAGS) -T $$(SYMS-$(1)) -Wl,-Map=$${@:.elf=.map} $$(COBJ-$(1)) $$(SOBJ-$(1)) -o $$@
 $$(BIN-$(1))      : $$(ELF-$(1)) | $$(BINDIR-$(1))
 	$(OBJCOPY) $$(ALL_OBJCOPYFLAGS) $$< $$@
 $$(OUTDIR-$(1))   :
