@@ -12,7 +12,7 @@
 
 #include "list.h"
 
-#define FAT_MAX_CACHE_SECTOR 4
+#define FAT_MAX_CACHE_SECTOR    4
 
 #define FAT_ATTRIBUTE_DEFAULT   0x00
 #define FAT_ATTRIBUTE_READONLY  0x01

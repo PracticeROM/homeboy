@@ -23,5 +23,5 @@ AllowShortEnumsOnASingleLine: false
 AlignEscapedNewlines: Left
 AlignTrailingComments: false
 SortIncludes: true
-AlignConsecutiveMacros: true
 AlignConsecutiveBitFields: true
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments

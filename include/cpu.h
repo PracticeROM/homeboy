@@ -19,11 +19,11 @@ inline uint64_t gettick() {
     register uint32_t tbl;
 
     // clang-format off
-        __asm__ __volatile__(
-            "mftbl %0\n"
-            "mftbu %1\n"
-            ::
-            "r"(tbl), "r"(tbu));
+    __asm__ __volatile__(
+        "mftbl %0\n"
+        "mftbu %1\n"
+        ::
+        "r"(tbl), "r"(tbu));
     // clang-format on
 
     return (uint64_t)((uint64_t)tbu << 32 | tbl);
