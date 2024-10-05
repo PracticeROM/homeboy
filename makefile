@@ -25,10 +25,14 @@ HB-NARJ     = $(COBJ-hb-NARJ) $(ELF-hb-NARJ)
 HB-NARE     = $(COBJ-hb-NARE) $(ELF-hb-NARE)
 
 all         : $(HOMEBOY)
+
 clean       :
 	rm -rf $(OBJDIR) $(BINDIR)
 
-.PHONY      : all clean
+format      :
+	find include src -name '*.h' -o -name '*.c' | xargs clang-format -i
+
+.PHONY      : all clean format
 
 define bin_template
 SRCDIR-$(1)      = src

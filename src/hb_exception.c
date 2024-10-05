@@ -1,16 +1,17 @@
 #include <string.h>
 #include <sys/stat.h>
+
 #include "cpu.h"
-#include "sys.h"
-#include "vc.h"
-#include "stdio.h"
 #include "hb_exception.h"
 #include "hb_heap.h"
+#include "stdio.h"
+#include "sys.h"
+#include "vc.h"
 
 #ifdef HB_EXCEPTIONS
 
 static int waiting = 1;
-static OSThread *faulting_thread = NULL;
+static OSThread* faulting_thread = NULL;
 static OSThread faulting_copy;
 
 static OSThread dump_thread;
@@ -18,29 +19,29 @@ static OSThread wait_thread;
 static char dump_stack[0x10000];
 static char wait_stack[0x1000];
 
-#define write_f(f,fmt,...)                                      \
-    do {                                                        \
-        snprintf(str_buf, sizeof(str_buf), fmt, __VA_ARGS__);   \
-        write(f, str_buf, strlen(str_buf) + 1);                 \
-    } while(0)
+#define write_f(f, fmt, ...)                                  \
+    do {                                                      \
+        snprintf(str_buf, sizeof(str_buf), fmt, __VA_ARGS__); \
+        write(f, str_buf, strlen(str_buf) + 1);               \
+    } while (0)
 
 void ppchalt(void) {
     asm("sync\n");
-    while(1) {
+    while (1) {
         asm("nop\n"
             "li 3,0\n"
             "nop\n");
     }
 }
 
-void *wait_for_mem_dump(void *arg) {
-    while(waiting) {
+void* wait_for_mem_dump(void* arg) {
+    while (waiting) {
         OSSuspendThread(&wait_thread);
     }
     return NULL;
 }
 
-void *dump_mem_thread(void *arg) {
+void* dump_mem_thread(void* arg) {
     static char str_buf[256];
     static char title_id_buf[5];
 
@@ -55,8 +56,8 @@ void *dump_mem_thread(void *arg) {
     snprintf(str_buf, sizeof(str_buf), "/hb_%s_crash_details.txt", title_id_buf);
     file = creat(str_buf, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     write_f(file, "Faulting PC: %08x\n", faulting_copy.context.srr0);
-    for(int i = 0, c = 0; i < 32; i++) {
-        if(c == 3 || i == 31) {
+    for (int i = 0, c = 0; i < 32; i++) {
+        if (c == 3 || i == 31) {
             write_f(file, "GPR %d: %08x\n", i, faulting_copy.context.gprs[i]);
             c = 0;
         } else {
@@ -64,8 +65,8 @@ void *dump_mem_thread(void *arg) {
             c++;
         }
     }
-    for(int i = 0, c = 0; i < 32; i++) {
-        if(c == 1 || i == 31) {
+    for (int i = 0, c = 0; i < 32; i++) {
+        if (c == 1 || i == 31) {
             write_f(file, "FPR %d: %016x\n", i, faulting_copy.context.fprs[i]);
             c = 0;
         } else {
@@ -87,10 +88,10 @@ void *dump_mem_thread(void *arg) {
 #ifdef HB_HEAP
     snprintf(str_buf, sizeof(str_buf), "/hb_%s_hb_heap_dump.bin", title_id_buf);
     file = creat(str_buf, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if(hb_heap_obj != NULL) {
+    if (hb_heap_obj != NULL) {
         write(file, hb_heap_obj->heap_ptr, hb_heap_obj->heap_size);
     } else {
-        char *str = "hb_heap_obj was null, no dump made.";
+        char* str = "hb_heap_obj was null, no dump made.";
         write(file, str, strlen(str));
     }
     close(file);
@@ -110,15 +111,12 @@ void handle_exception(enum ppc_exception exception) {
     OSResumeThread(&wait_thread);
     OSResumeThread(&dump_thread);
     OSSuspendThread(faulting_thread);
-
 }
 
 void init_hb_exceptions(void) {
-    const enum ppc_exception exceptions_to_handle[] = {
-        EX_DSI, EX_ISI, EX_FP_UNAVAIL, EX_PROG
-    };
+    const enum ppc_exception exceptions_to_handle[] = {EX_DSI, EX_ISI, EX_FP_UNAVAIL, EX_PROG};
 
-    for(int i = 0; i < sizeof(exceptions_to_handle) / sizeof(*exceptions_to_handle); i++) {
+    for (int i = 0; i < sizeof(exceptions_to_handle) / sizeof(*exceptions_to_handle); i++) {
         ex_handlers[i] = __handle_exception;
     }
 }

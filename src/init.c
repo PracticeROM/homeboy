@@ -1,23 +1,22 @@
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "fs.h"
 #include "hb_debug.h"
-#include "hb_heap.h"
+#include "hb_exception.h"
 #include "hb_fat.h"
+#include "hb_heap.h"
+#include "hb_n64vcmem.h"
 #include "homeboy.h"
 #include "sys.h"
 #include "vc.h"
-#include "hb_exception.h"
-#include "hb_n64vcmem.h"
 
-#define HB_HEAPSIZE         0xD000
+#define HB_HEAPSIZE 0xD000
 
-INIT bool _start(void **dest, size_t size)
-{
-    if(!ramSetSize(dest, 0x00800000))
-    {
+INIT bool _start(void** dest, size_t size) {
+    if (!ramSetSize(dest, 0x00800000)) {
         return 0;
     }
 
@@ -40,13 +39,11 @@ INIT bool _start(void **dest, size_t size)
     init_hb_exceptions();
 #endif
 
-    if(hb_hid < 0)
-    {
+    if (hb_hid < 0) {
         hb_hid = iosCreateHeap((void*)ios_heap_addr, HB_HEAPSIZE);
     }
 
-    if(hb_hid >= 0)
-    {
+    if (hb_hid >= 0) {
         homeboy_obj->key = 0x1234;
     }
 
@@ -64,9 +61,8 @@ INIT bool _start(void **dest, size_t size)
     strcat(dram_fn, "/data/dram_save");
 
     // Check if a dram restore needs to be done.
-    int fd = fs_open(dram_fn,1);
-    if(fd >= 0)
-    {
+    int fd = fs_open(dram_fn, 1);
+    if (fd >= 0) {
         uint32_t dram_params[2];
         fs_read(fd, dram_params, sizeof(dram_params));
         fs_read(fd, (char*)n64_dram + dram_params[0], dram_params[1]);

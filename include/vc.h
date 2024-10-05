@@ -1,13 +1,14 @@
 #ifndef _VC_H
 #define _VC_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
-#include "version.h"
-#include "cpu.h"
 
-#define INIT   __attribute__((section(".init")))
+#include "cpu.h"
+#include "version.h"
+
+#define INIT __attribute__((section(".init")))
 
 enum ppc_exception {
     EX_RESET,
@@ -81,7 +82,7 @@ typedef struct System {
 
 //! TODO: figure out the System struct on MM
 typedef struct System {
-    char        unk_0x00[0x28];
+    char unk_0x00[0x28];
     void* apObject[SOT_COUNT];
 } System;
 
@@ -155,47 +156,49 @@ typedef struct OSThread {
 
 typedef void (*ex_handler_t)(enum ppc_exception);
 
-int     cpuMapObject(Cpu *cpu, void *dev_p, uint32_t address_start, uint32_t address_end, uint32_t param_5);
-int     cpuSetDeviceGet(Cpu *cpu, CpuDevice *dev,void *lb,void *lh,void *lw,void *ld);
-int     cpuSetDevicePut(Cpu *cpu, CpuDevice *dev,void *sb,void *sh,void *sw,void *sd);
-bool    ramSetSize(void **dest, uint32_t size);
-bool    xlHeapTake(void **dest, uint32_t size);
-bool    xlHeapFree(void *ptr);
-int     xlObjectMake(void **obj, void *parent, _XL_OBJECTTYPE *class);
+int cpuMapObject(Cpu* cpu, void* dev_p, uint32_t address_start, uint32_t address_end, uint32_t param_5);
+int cpuSetDeviceGet(Cpu* cpu, CpuDevice* dev, void* lb, void* lh, void* lw, void* ld);
+int cpuSetDevicePut(Cpu* cpu, CpuDevice* dev, void* sb, void* sh, void* sw, void* sd);
+bool ramSetSize(void** dest, uint32_t size);
+bool xlHeapTake(void** dest, uint32_t size);
+bool xlHeapFree(void* ptr);
+int xlObjectMake(void** obj, void* parent, _XL_OBJECTTYPE* class);
 
-void    OSReport(const char *msg, ...);
-void    OSCreateThread(OSThread *thread, void *(*func)(void*), void *arg, void *stack, size_t stack_size, int pri, int detached);
-void    OSResumeThread(OSThread *thread);
-void    OSSuspendThread(OSThread *thread);
+void OSReport(const char* msg, ...);
+void OSCreateThread(OSThread* thread, void* (*func)(void*), void* arg, void* stack, size_t stack_size, int pri,
+                    int detached);
+void OSResumeThread(OSThread* thread);
+void OSSuspendThread(OSThread* thread);
 
-int     IOS_OpenAsync(const char *file, int mode, void *callback, void *callback_data);
-int     IOS_Open(const char *file, int mode);
-int     IOS_CloseAsync(int fd, void *callback, void *callback_data);
-int     IOS_Close(int fd);
-int     IOS_ReadAsync(int fd, void *data, size_t len, void *callback, void *callback_data);
-int     IOS_Read(int fd, void *data, size_t len);
-int     IOS_WriteAsync(int fd, void *data, size_t len, void *callback, void *callback_data);
-int     IOS_Write(int fd, void *data, size_t len);
-int     IOS_SeekAsync(int fd, int where, int whence, void *callback, void *callback_data);
-int     IOS_Seek(int fd, int where, int whence);
-int     IOS_IoctlAsync(int fd, int ioctl, void *buffer_in, size_t size_in, void *buffer_io, size_t size_out, void *callback, void *callback_data);
-int     IOS_Ioctl(int fd, int ioctl, void *buffer_in, size_t size_in, void *buffer_io, size_t size_out);
-int     IOS_IoctlvAsync(int fd, int ioctl, int cnt_in, int cnt_io, void *argv, void *callback, void *callback_data);
-int     IOS_Ioctlv(int fd, int ioctl, int cnt_in, int cnt_io, void *argv);
+int IOS_OpenAsync(const char* file, int mode, void* callback, void* callback_data);
+int IOS_Open(const char* file, int mode);
+int IOS_CloseAsync(int fd, void* callback, void* callback_data);
+int IOS_Close(int fd);
+int IOS_ReadAsync(int fd, void* data, size_t len, void* callback, void* callback_data);
+int IOS_Read(int fd, void* data, size_t len);
+int IOS_WriteAsync(int fd, void* data, size_t len, void* callback, void* callback_data);
+int IOS_Write(int fd, void* data, size_t len);
+int IOS_SeekAsync(int fd, int where, int whence, void* callback, void* callback_data);
+int IOS_Seek(int fd, int where, int whence);
+int IOS_IoctlAsync(int fd, int ioctl, void* buffer_in, size_t size_in, void* buffer_io, size_t size_out, void* callback,
+                   void* callback_data);
+int IOS_Ioctl(int fd, int ioctl, void* buffer_in, size_t size_in, void* buffer_io, size_t size_out);
+int IOS_IoctlvAsync(int fd, int ioctl, int cnt_in, int cnt_io, void* argv, void* callback, void* callback_data);
+int IOS_Ioctlv(int fd, int ioctl, int cnt_in, int cnt_io, void* argv);
 
-int     iosCreateHeap(void *heap, size_t size);
-void*   iosAllocAligned(int hid, size_t size, size_t page_size);
-bool    iosFree(int hid, void *ptr);
+int iosCreateHeap(void* heap, size_t size);
+void* iosAllocAligned(int hid, size_t size, size_t page_size);
+bool iosFree(int hid, void* ptr);
 
-extern System                  *gpSystem;
-extern uint32_t                 reset_flag;  // TODO: use decomp name
+extern System* gpSystem;
+extern uint32_t reset_flag; // TODO: use decomp name
 
 // TODO: use decomp types and names
-#define cur_thread              (*(volatile OSThread**)0x800000C0)
-#define ex_handlers             ((volatile ex_handler_t*)0x80003000)
-#define title_id                (*(volatile uint32_t*)0x80003180)
+#define cur_thread           (*(volatile OSThread**)0x800000C0)
+#define ex_handlers          ((volatile ex_handler_t*)0x80003000)
+#define title_id             (*(volatile uint32_t*)0x80003180)
 
-#define ios_heap_addr           0x933E8000
-#define allocMEM2(ptr, size)    xlHeapTake((void**)(ptr), (0x70000000 | (size)))
+#define ios_heap_addr        0x933E8000
+#define allocMEM2(ptr, size) xlHeapTake((void**)(ptr), (0x70000000 | (size)))
 
 #endif
