@@ -24,6 +24,21 @@ static _XL_OBJECTTYPE homeboy_class = {
     homeboy_event,
 };
 
+static inline u64 gettick() {
+    register u32 tbu;
+    register u32 tbl;
+
+    // clang-format off
+    __asm__ __volatile__(
+        "mftbl %0\n"
+        "mftbu %1\n"
+        ::
+        "r"(tbl), "r"(tbu));
+    // clang-format on
+
+    return (u64)((u64)tbu << 32 | tbl);
+}
+
 static void do_write() {
     homeboy_obj->ready = 0;
     homeboy_obj->busy = 1;

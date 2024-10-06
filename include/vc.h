@@ -6,24 +6,10 @@
 #include <stdint.h>
 
 #include "cpu.h"
+#include "os.h"
 #include "version.h"
 
 #define INIT __attribute__((section(".init")))
-
-enum ppc_exception {
-    EX_RESET,
-    EX_MACH_CHECK,
-    EX_DSI,
-    EX_ISI,
-    EX_EXT_INTR,
-    EX_ALIGN,
-    EX_PROG,
-    EX_FP_UNAVAIL,
-    EX_DECR,
-    EX_SYSCALL,
-    EX_TRACE,
-    EX_MAX
-};
 
 // system.h
 typedef enum SystemMode {
@@ -60,7 +46,7 @@ typedef enum SystemObjectType {
     SOT_COUNT = 23,
 } SystemObjectType;
 
-typedef int32_t SystemRomType; // big enum, no need to have it here for now
+typedef s32 SystemRomType; // big enum, no need to have it here for now
 
 #if IS_OOT
 
@@ -71,11 +57,11 @@ typedef struct System {
     /* 0x08 */ SystemObjectType storageDevice;
     /* 0x0C */ SystemRomType eTypeROM;
     /* 0x10 */ void* apObject[SOT_COUNT];
-    /* 0x6C */ int32_t unk_6C;
-    /* 0x70 */ uint64_t nAddressBreak;
-    /* 0x78 */ int32_t unk_78[19];
+    /* 0x6C */ s32 unk_6C;
+    /* 0x70 */ u64 nAddressBreak;
+    /* 0x78 */ s32 unk_78[19];
     /* 0xC4 */ void* pSound;
-    /* 0xC8 */ uint8_t anException[16];
+    /* 0xC8 */ u8 anException[16];
 } System; // size = 0xD8
 
 #elif IS_MM
@@ -88,6 +74,27 @@ typedef struct System {
 
 #endif
 
+typedef struct Ram {
+    /* 0x00 */ void* pHost;
+    /* 0x04 */ u8* pBuffer;
+    /* 0x08 */ u32 nSize;
+    /* 0x0C */ u32 RDRAM_CONFIG_REG;
+    /* 0x10 */ u32 RDRAM_DEVICE_ID_REG;
+    /* 0x14 */ u32 RDRAM_DELAY_REG;
+    /* 0x18 */ u32 RDRAM_MODE_REG;
+    /* 0x1C */ u32 RDRAM_REF_INTERVAL_REG;
+    /* 0x20 */ u32 RDRAM_REF_ROW_REG;
+    /* 0x24 */ u32 RDRAM_RAS_INTERVAL_REG;
+    /* 0x28 */ u32 RDRAM_MIN_INTERVAL_REG;
+    /* 0x2C */ u32 RDRAM_ADDR_SELECT_REG;
+    /* 0x30 */ u32 RDRAM_DEVICE_MANUF_REG;
+    /* 0x34 */ u32 RI_MODE_REG;
+    /* 0x38 */ u32 RI_CONFIG_REG;
+    /* 0x3C */ u32 RI_SELECT_REG;
+    /* 0x40 */ u32 RI_REFRESH_REG;
+    /* 0x44 */ u32 RI_LATENCY_REG;
+} Ram; // size = 0x48
+
 #define SYSTEM_CPU(pSystem) ((void*)(((System*)(pSystem))->apObject[SOT_CPU]))
 
 // xlObject.h
@@ -97,89 +104,35 @@ typedef int (*EventFunc)(void* pObject, int nEvent, void* pArgument);
 
 struct _XL_OBJECTTYPE {
     /* 0x0 */ char* szName;
-    /* 0x4 */ int32_t nSizeObject;
+    /* 0x4 */ s32 nSizeObject;
     /* 0x8 */ _XL_OBJECTTYPE* pClassBase;
     /* 0xC */ EventFunc pfEvent;
 }; // size = 0x10
 
-// OSContext.h
-typedef struct OSContext {
-    /* 0x0 */ uint32_t gprs[32];
-    /* 0x80 */ uint32_t cr;
-    /* 0x84 */ uint32_t lr;
-    /* 0x88 */ uint32_t ctr;
-    /* 0x8C */ uint32_t xer;
-    /* 0x90 */ double fprs[32];
-    /* 0x190 */ uint32_t fpscr_pad;
-    /* 0x194 */ uint32_t fpscr;
-    /* 0x198 */ uint32_t srr0;
-    /* 0x19C */ uint32_t srr1;
-    /* 0x1A0 */ uint16_t mode;
-    /* 0x1A2 */ uint16_t state;
-    /* 0x1A4 */ uint32_t gqrs[8];
-    /* 0x1C4 */ uint32_t psf_pad;
-    /* 0x1C8 */ double psfs[32];
-} OSContext;
-
-// OSThread.h
-typedef struct OSThreadQueue {
-    /* 0x0 */ struct OSThread* head;
-    /* 0x4 */ struct OSThread* tail;
-} OSThreadQueue;
-
-typedef struct OSMutexQueue {
-    /* 0x0 */ struct OSMutex* head;
-    /* 0x4 */ struct OSMutex* tail;
-} OSMutexQueue;
-
-typedef struct OSThread {
-    OSContext context;
-    /* 0x2C8 */ uint16_t state;
-    /* 0x2CA */ uint16_t flags;
-    /* 0x2CC */ int32_t suspend;
-    /* 0x2D0 */ int32_t priority;
-    /* 0x2D4 */ int32_t base;
-    /* 0x2D8 */ uint32_t val;
-    /* 0x2DC */ OSThreadQueue* queue;
-    /* 0x2E0 */ struct OSThread* next;
-    /* 0x2E4 */ struct OSThread* prev;
-    /* 0x2E8 */ OSThreadQueue joinQueue;
-    /* 0x2F0 */ struct OSMutex* mutex;
-    /* 0x2F4 */ OSMutexQueue mutexQueue;
-    /* 0x2FC */ struct OSThread* nextActive;
-    /* 0x300 */ struct OSThread* prevActive;
-    /* 0x304 */ uint32_t* stackBegin;
-    /* 0x308 */ uint32_t* stackEnd;
-    /* 0x30C */ int32_t error;
-    /* 0x310 */ void* specific[2];
-} OSThread;
-
-typedef void (*ex_handler_t)(enum ppc_exception);
-
 #if IS_OOT
-bool cpuExecuteUpdate(Cpu* cpu, int32_t* pnAddressGCN, int32_t nCount);
+bool cpuExecuteUpdate(Cpu* pCPU, s32* pnAddressGCN, u32 nCount);
 #elif IS_MM
-bool cpuExecuteUpdate(Cpu* cpu, int32_t* pnAddressGCN, int64_t nTime);
+bool cpuExecuteUpdate(Cpu* cpu, s32* pnAddressGCN, s64 nTime);
 #endif
-int cpuMapObject(Cpu* cpu, void* dev_p, uint32_t address_start, uint32_t address_end, uint32_t param_5);
-int cpuSetDeviceGet(Cpu* cpu, CpuDevice* dev, void* lb, void* lh, void* lw, void* ld);
-int cpuSetDevicePut(Cpu* cpu, CpuDevice* dev, void* sb, void* sh, void* sw, void* sd);
-bool cpuFindFunction(Cpu* cpu, int theAddress, CpuFunction** tree_node);
-bool ramSetSize(void** dest, uint32_t size);
-bool xlHeapTake(void** dest, uint32_t size);
-bool xlHeapFree(void* ptr);
-int xlObjectMake(void** obj, void* parent, _XL_OBJECTTYPE* class);
+bool cpuMapObject(Cpu* pCPU, void* pObject, u32 nAddress0, u32 nAddress1, s32 nType);
+bool cpuSetDeviceGet(Cpu* pCPU, CpuDevice* pDevice, void* pfGet8, void* pfGet16, void* pfGet32, void* pfGet64);
+bool cpuSetDevicePut(Cpu* pCPU, CpuDevice* pDevice, void* pfPut8, void* pfPut16, void* pfPut32, void* pfPut64);
+bool cpuFindFunction(Cpu* pCPU, s32 theAddress, CpuFunction** tree_node);
+bool ramSetSize(Ram* pRAM, s32 nSize);
+bool xlHeapTake(void** ppHeap, s32 nByteCount);
+bool xlHeapFree(void** ppHeap);
+bool xlObjectMake(void** ppObject, void* pArgument, _XL_OBJECTTYPE* pType);
 
-void DCStoreRange(const void* buf, uint32_t len);
-void ICInvalidateRange(const void* buf, uint32_t len);
+void DCStoreRange(const void* buf, u32 len);
+void ICInvalidateRange(const void* buf, u32 len);
 
 void OSReport(const char* msg, ...);
-void OSCreateThread(OSThread* thread, void* (*func)(void*), void* arg, void* stack, size_t stack_size, int pri,
-                    int detached);
+bool OSCreateThread(OSThread* thread, OSThreadFunc func, void* funcArg, void* stackBegin, u32 stackSize, s32 prio,
+                    u16 flags);
 void OSResumeThread(OSThread* thread);
 void OSSuspendThread(OSThread* thread);
-int64_t OSGetTime(void);
-uint32_t OSGetTick(void);
+s64 OSGetTime(void);
+u32 OSGetTick(void);
 
 int IOS_OpenAsync(const char* file, int mode, void* callback, void* callback_data);
 int IOS_Open(const char* file, int mode);
@@ -201,14 +154,14 @@ int iosCreateHeap(void* heap, size_t size);
 void* iosAllocAligned(int hid, size_t size, size_t page_size);
 bool iosFree(int hid, void* ptr);
 
-extern int32_t ganMapGPR[32];
+extern s32 ganMapGPR[32];
 extern System* gpSystem;
-extern uint32_t reset_flag; // TODO: use decomp name
+extern u32 reset_flag; // TODO: use decomp name
 
 // TODO: use decomp types and names
 #define cur_thread           (*(volatile OSThread**)0x800000C0)
-#define ex_handlers          ((volatile ex_handler_t*)0x80003000)
-#define title_id             (*(volatile uint32_t*)0x80003180)
+#define ex_handlers          ((volatile OSExceptionHandler*)0x80003000)
+#define title_id             (*(volatile u32*)0x80003180)
 
 #define ios_heap_addr        0x933E8000
 #define allocMEM2(ptr, size) xlHeapTake((void**)(ptr), (0x70000000 | (size)))
