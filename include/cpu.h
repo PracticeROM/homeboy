@@ -292,8 +292,8 @@ typedef struct Cpu Cpu;
 typedef int32_t (*CpuExecuteFunc)(Cpu* pCPU, int32_t nCount, int32_t nAddressN64, int32_t nAddressGCN);
 
 #if IS_OOT
-// _CPU
-struct Cpu {
+
+typedef struct Cpu {
     /* 0x00000 */ int32_t nMode;
     /* 0x00004 */ int32_t nTick;
     /* 0x00008 */ int64_t nLo;
@@ -309,23 +309,23 @@ struct Cpu {
     /* 0x00038 */ uint32_t nTickLast;
     /* 0x0003C */ uint32_t nRetrace;
     /* 0x00040 */ uint32_t nRetraceUsed;
-    /* 0x00044 */ CpuGpr aGPR[32];
-    /* 0x00144 */ CpuFpr aFPR[32];
-    /* 0x00244 */ uint64_t aTLB[48][5];
-    /* 0x009C4 */ int32_t anFCR[32];
-    /* 0x00A44 */ int64_t anCP0[32];
-    /* 0x00B44 */ CpuExecuteFunc pfStep;
-    /* 0x00B48 */ CpuExecuteFunc pfJump;
-    /* 0x00B4C */ CpuExecuteFunc pfCall;
-    /* 0x00B50 */ CpuExecuteFunc pfIdle;
-    /* 0x00B54 */ CpuExecuteFunc pfRam;
-    /* 0x00B58 */ CpuExecuteFunc pfRamF;
-    /* 0x00B64 */ CpuDevice* apDevice[256];
-    /* 0x00F64 */ uint8_t aiDevice[1 << DEVICE_ADDRESS_INDEX_BITS];
-    /* 0x10F64 */ void* gHeap1;
-    /* 0x10F68 */ void* gHeap2;
-    /* 0x10F6C */ uint32_t aHeap1Flag[192];
-    /* 0x1126C */ uint32_t aHeap2Flag[13];
+    /* 0x00048 */ CpuGpr aGPR[32];
+    /* 0x00148 */ CpuFpr aFPR[32];
+    /* 0x00248 */ uint64_t aTLB[48][5];
+    /* 0x009C8 */ int32_t anFCR[32];
+    /* 0x00A48 */ int64_t anCP0[32];
+    /* 0x00B48 */ CpuExecuteFunc pfStep;
+    /* 0x00B4C */ CpuExecuteFunc pfJump;
+    /* 0x00B50 */ CpuExecuteFunc pfCall;
+    /* 0x00B54 */ CpuExecuteFunc pfIdle;
+    /* 0x00B58 */ CpuExecuteFunc pfRam;
+    /* 0x00B5C */ CpuExecuteFunc pfRamF;
+    /* 0x00B60 */ CpuDevice* apDevice[256];
+    /* 0x00F60 */ uint8_t aiDevice[1 << DEVICE_ADDRESS_INDEX_BITS];
+    /* 0x10F60 */ void* gHeap1;
+    /* 0x10F64 */ void* gHeap2;
+    /* 0x10F68 */ uint32_t aHeap1Flag[192];
+    /* 0x11268 */ uint32_t aHeap2Flag[13];
     /* 0x1129C */ void* gHeapTree;
     /* 0x112A0 */ uint32_t aHeapTreeFlag[125];
     /* 0x11494 */ CpuTreeRoot* gTree;
@@ -335,67 +335,49 @@ struct Cpu {
     /* 0x1221C */ uint32_t nFlagRAM;
     /* 0x12220 */ uint32_t nFlagCODE;
     /* 0x12224 */ uint32_t nCompileFlag;
-    /* 0x12228 */ int32_t unk_12228;
-
-    //! TODO: fix match issue with OSAlarm
-    // /* 0x12230 */ OSAlarm alarmRetrace;
-    /* 0x12230 */ int32_t alarmRetrace[12];
-
-    /* 0x1225C */ int32_t unk_1225C;
-    /* 0x12260 */ int32_t unk_12260;
-    /* 0x12264 */ int32_t unk_12264;
-    /* 0x12268 */ int32_t unk_12268;
-    /* 0x1226C */ int32_t unk_1226C;
+    /* 0x12228 */ int32_t unk_12228[18];
     /* 0x12270 */ CpuOptimize nOptimize;
     /* 0x12298 */ int64_t nTimeRetrace;
-    uint8_t pad[0x30];
-}; // size = 0x122D0
+    /* 0x122A0 */ uint8_t pad[0x30];
+} Cpu; // size = 0x122D0
 
 #elif IS_MM
 
-//! TODO: figure out this struct on MM
-//! (for now nothing is used so it doesn't matter except the size)
-struct Cpu {
-    /* 0x00000 */ uint32_t status;
+typedef struct Cpu {
+    /* 0x00000 */ int32_t nMode;
     /* 0x00004 */ char unk_0x04[0x14];
     /* 0x00018 */ struct System* sys;
     /* 0x0001C */ char unk_0x1C[0x4];
-    /* 0x00020 */ uint32_t lo[2];
-    /* 0x00028 */ uint32_t hi[2];
-    /* 0x00030 */ uint32_t cache_cnt;
-    /* 0x00034 */ uint8_t phys_ram_dev_idx;
-    /* 0x00038 */ uint32_t pc;
-    /* 0x0003C */ char unk_0x3C[0x10];
-    /* 0x0004C */ CpuFunction* working_node;
-    /* 0x00050 */ char unk_0x50[4];
-    /* 0x00054 */ int timer;
-    /* 0x00058 */ union {
-        uint64_t gpr64[32];
-        uint32_t gpr[64];
-    };
-    /* 0x00158 */ union {
-        double fpr64[32];
-        float fpr[64];
-    };
-    /* 0x00258 */ char unk_0x258[0x780];
-    /* 0x009D8 */ uint32_t FSCR[32];
-    /* 0x00A58 */ uint32_t cp0[64];
-    /* 0x00B58 */ void* exec_opcode_func;
-    /* 0x00B5C */ void* exec_jump_func;
-    /* 0x00B60 */ void* exec_call_func;
-    /* 0x00B64 */ void* exec_idle_func;
-    /* 0x00B68 */ void* exec_load_store_func;
-    /* 0x00B6C */ void* exec_fp_load_store_func;
-    /* 0x00B70 */ uint32_t time_hi;
-    /* 0x00B74 */ uint32_t time_lo;
+    /* 0x00020 */ int64_t nLo;
+    /* 0x00028 */ int64_t nHi;
+    /* 0x00030 */ uint32_t nCountAddress;
+    /* 0x00034 */ uint8_t iDeviceDefault;
+    /* 0x00038 */ uint32_t nPC;
+    /* 0x0003C */ uint32_t nWaitPC;
+    /* 0x00040 */ char unk_0x3C[0xC];
+    /* 0x0004C */ CpuFunction* pFunctionLast;
+    /* 0x00050 */ int32_t nReturnAddrLast;
+    /* 0x00054 */ int32_t survivalTimer;
+    /* 0x00058 */ CpuGpr aGPR[32];
+    /* 0x00158 */ CpuFpr aFPR[32];
+    /* 0x00258 */ uint64_t aTLB[48][5];
+    /* 0x009D8 */ int32_t anFCR[32];
+    /* 0x00A58 */ int64_t anCP0[32];
+    /* 0x00B58 */ CpuExecuteFunc pfStep;
+    /* 0x00B5C */ CpuExecuteFunc pfJump;
+    /* 0x00B60 */ CpuExecuteFunc pfCall;
+    /* 0x00B64 */ CpuExecuteFunc pfIdle;
+    /* 0x00B68 */ CpuExecuteFunc pfRam;
+    /* 0x00B6C */ CpuExecuteFunc pfRamF;
+    /* 0x00B70 */ int64_t nTimeLast;
     /* 0x00B78 */ char unk_0xB78[8];
-    /* 0x00B80 */ CpuDevice* cpu_devs[256];
-    /* 0x00F80 */ uint8_t dev_idx[0x10000];
-    /* 0x10F80 */ void* sm_blk_code;
-    /* 0x10F84 */ void* lg_blk_code;
-    /* 0x10F88 */ uint32_t sm_blk_alloc[256];
-    /* 0x11388 */ uint32_t lg_blk_alloc[13];
-    /* 0x113BC */ CpuTreeRoot* tree_ctx;
+    /* 0x00B80 */ CpuDevice* apDevice[256];
+    /* 0x00F80 */ uint8_t aiDevice[1 << DEVICE_ADDRESS_INDEX_BITS];
+    /* 0x10F80 */ void* gHeap1;
+    /* 0x10F84 */ void* gHeap2;
+    /* 0x10F88 */ uint32_t aHeap1Flag[256];
+    /* 0x11388 */ uint32_t aHeap2Flag[13];
+    /* 0x113BC */ CpuTreeRoot* gHeapTree;
     /* 0x113C0 */ char unk_0x113C0[0xDC0];
     /* 0x12180 */ uint32_t known_regs;
     /* 0x12184 */ char unk_0x12184[8];
@@ -403,7 +385,7 @@ struct Cpu {
     /* 0x12190 */ char unk_0x12190[0x18];
     /* 0x121A8 */ uint32_t prev_loadstore_base;
     /* 0x121AC */ char unk_0x121AC[0x14];
-}; // size = 0x121C0
+} Cpu; // size = 0x121C0
 
 #endif
 

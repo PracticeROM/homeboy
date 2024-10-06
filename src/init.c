@@ -10,6 +10,7 @@
 #include "hb_heap.h"
 #include "hb_n64vcmem.h"
 #include "homeboy.h"
+#include "hooks.h"
 #include "sys.h"
 #include "vc.h"
 
@@ -22,6 +23,7 @@ INIT bool _start(void** dest, size_t size) {
 
     n64_dram = dest[1];
 
+    init_hooks();
     homeboy_init();
 #ifdef HB_HEAP
     homeboy_heap_init();
