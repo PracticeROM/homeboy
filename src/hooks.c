@@ -1,7 +1,8 @@
 #include "hooks.h"
 #include "vc.h"
 
-extern uint8_t vc_crash_hook_addr[];
+extern uint8_t vc_crash_hook_addr_ha[];
+extern uint8_t vc_crash_hook_addr_l[];
 
 // Change an instruction in memory.
 void patch_instruction(void* addr, uint32_t value) {
@@ -128,6 +129,6 @@ static int32_t vc_crash_hook(Cpu* pCPU, int32_t nCount, int32_t nAddressN64, int
 
 void init_hooks(void) {
     // Replace reference to cpuExecuteCall in cpuExecute
-    patch_ha(vc_crash_hook_addr, vc_crash_hook);
-    patch_l(vc_crash_hook_addr + 0xC, vc_crash_hook);
+    patch_ha(vc_crash_hook_addr_ha, vc_crash_hook);
+    patch_l(vc_crash_hook_addr_l, vc_crash_hook);
 }

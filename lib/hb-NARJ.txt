@@ -1,5 +1,6 @@
 cpuExecuteUpdate                    = 0x8003C8C0;
-vc_crash_hook_addr                  = 0x8004A790;
+vc_crash_hook_addr_ha               = 0x8004A790;
+vc_crash_hook_addr_l                = 0x8004A79C;
 cpuMapObject                        = 0x8004B27C;
 cpuSetDeviceGet                     = 0x8004B67C;
 cpuSetDevicePut                     = 0x8004B694;
