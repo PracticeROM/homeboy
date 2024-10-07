@@ -173,13 +173,16 @@ typedef struct CpuDevice {
     /* 0x20 */ Put16Func pfPut16;
     /* 0x24 */ Put32Func pfPut32;
     /* 0x28 */ Put64Func pfPut64;
-#if IS_OOT
+#if IS_GC
+    /* 0x2C */ u32 nAddressPhysical0;
+    /* 0x30 */ u32 nAddressPhysical1;
+#elif IS_WII && IS_OOT
     /* 0x2C */ GetBlockFunc pfGetBlock;
     /* 0x30 */ u32 nAddressVirtual0;
     /* 0x34 */ u32 nAddressVirtual1;
     /* 0x38 */ u32 nAddressPhysical0;
     /* 0x3C */ u32 nAddressPhysical1;
-#elif IS_MM
+#elif IS_WII && IS_MM
     /* 0x2C */ u32 nAddressPhysical;
     /* 0x30 */ u32 nSize;
 #endif
@@ -264,7 +267,55 @@ typedef struct CpuOptimize {
 typedef struct Cpu Cpu;
 typedef s32 (*CpuExecuteFunc)(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddressGCN);
 
-#if IS_OOT
+#if IS_GC
+
+struct Cpu {
+    /* 0x00000 */ s32 nMode;
+    /* 0x00004 */ s32 nTick;
+    /* 0x00008 */ void* pHost;
+    /* 0x00010 */ s64 nLo;
+    /* 0x00018 */ s64 nHi;
+    /* 0x00020 */ s32 nCountAddress;
+    /* 0x00024 */ s32 iDeviceDefault;
+    /* 0x00028 */ u32 nPC;
+    /* 0x0002C */ u32 nWaitPC;
+    /* 0x00030 */ u32 nCallLast;
+    /* 0x00034 */ CpuFunction* pFunctionLast;
+    /* 0x00038 */ s32 nReturnAddrLast;
+    /* 0x0003C */ s32 survivalTimer;
+    /* 0x00040 */ CpuGpr aGPR[32];
+    /* 0x00140 */ CpuFpr aFPR[32];
+    /* 0x00240 */ u64 aTLB[48][5];
+    /* 0x009C0 */ s32 anFCR[32];
+    /* 0x00A40 */ s64 anCP0[32];
+    /* 0x00B40 */ CpuExecuteFunc pfStep;
+    /* 0x00B44 */ CpuExecuteFunc pfJump;
+    /* 0x00B48 */ CpuExecuteFunc pfCall;
+    /* 0x00B4C */ CpuExecuteFunc pfIdle;
+    /* 0x00B50 */ CpuExecuteFunc pfRam;
+    /* 0x00B54 */ CpuExecuteFunc pfRamF;
+    /* 0x00B58 */ u32 nTickLast;
+    /* 0x00B5C */ u32 nRetrace;
+    /* 0x00B60 */ u32 nRetraceUsed;
+    /* 0x00B64 */ CpuDevice* apDevice[256];
+    /* 0x00F64 */ u8 aiDevice[65536];
+    /* 0x10F64 */ void* gHeap1;
+    /* 0x10F68 */ void* gHeap2;
+    /* 0x10F6C */ u32 aHeap1Flag[192];
+    /* 0x1126C */ u32 aHeap2Flag[13];
+    /* 0x112A0 */ CpuTreeRoot* gTree;
+    /* 0x112A4 */ CpuAddress aAddressCache[256];
+    /* 0x11EA4 */ s32 nCountCodeHack;
+    /* 0x11EA8 */ CpuCodeHack aCodeHack[32];
+    /* 0x12028 */ s64 nTimeRetrace;
+    /* 0x12030 */ OSAlarm alarmRetrace;
+    /* 0x12058 */ u32 nFlagRAM;
+    /* 0x1205C */ u32 nFlagCODE;
+    /* 0x12060 */ u32 nCompileFlag;
+    /* 0x12064 */ CpuOptimize nOptimize;
+}; // size = 0x12090
+
+#elif IS_WII && IS_OOT
 
 typedef struct Cpu {
     /* 0x00000 */ s32 nMode;
@@ -314,7 +365,7 @@ typedef struct Cpu {
     /* 0x122A0 */ u8 pad[0x30];
 } Cpu; // size = 0x122D0
 
-#elif IS_MM
+#elif IS_WII && IS_MM
 
 typedef struct Cpu {
     /* 0x00000 */ s32 nMode;

@@ -41,6 +41,7 @@ INIT bool _start(Ram* pRAM, s32 nSize) {
     init_hb_exceptions();
 #endif
 
+#if IS_WII
     if (hb_hid < 0) {
         hb_hid = iosCreateHeap((void*)ios_heap_addr, HB_HEAPSIZE);
     }
@@ -72,6 +73,7 @@ INIT bool _start(Ram* pRAM, s32 nSize) {
         fs_delete(dram_fn);
         homeboy_obj->dram_restore_key = 0x6864;
     }
+#endif
 
     return 1;
 }

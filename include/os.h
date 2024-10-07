@@ -67,4 +67,21 @@ typedef struct OSThread {
 typedef void* (*OSThreadFunc)(void* arg);
 typedef void (*OSExceptionHandler)(u8 type, OSContext* ctx);
 
+typedef s64 OSTime;
+typedef u32 OSTick;
+
+typedef struct OSAlarm OSAlarm;
+
+typedef void (*OSAlarmHandler)(OSAlarm* alarm, OSContext* context);
+
+struct OSAlarm {
+    OSAlarmHandler handler;
+    u32 tag;
+    OSTime fire;
+    OSAlarm* prev;
+    OSAlarm* next;
+    OSTime period;
+    OSTime start;
+};
+
 #endif

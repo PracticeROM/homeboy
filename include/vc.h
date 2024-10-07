@@ -17,6 +17,31 @@ typedef enum SystemMode {
     SM_STOPPED = 1,
 } SystemMode;
 
+#if IS_GC
+
+typedef enum SystemObjectType {
+    SOT_NONE = -1,
+    SOT_CPU = 0,
+    SOT_PIF = 1,
+    SOT_RAM = 2,
+    SOT_ROM = 3,
+    SOT_RSP = 4,
+    SOT_RDP = 5,
+    SOT_MIPS = 6,
+    SOT_DISK = 7,
+    SOT_FLASH = 8,
+    SOT_SRAM = 9,
+    SOT_AUDIO = 10,
+    SOT_VIDEO = 11,
+    SOT_SERIAL = 12,
+    SOT_LIBRARY = 13,
+    SOT_PERIPHERAL = 14,
+    SOT_RDB = 15,
+    SOT_COUNT = 16,
+} SystemObjectType;
+
+#elif IS_WII
+
 typedef enum SystemObjectType {
     SOT_NONE = -1,
     SOT_CPU = 0,
@@ -45,11 +70,37 @@ typedef enum SystemObjectType {
     SOT_COUNT = 23,
 } SystemObjectType;
 
+#endif
+
 typedef s32 SystemRomType; // big enum, no need to have it here for now
 
-#if IS_OOT
+#if IS_GC
 
-// system.h
+typedef bool (*SystemCopyCallbackFunc)(void);
+
+typedef struct SystemRomCopy {
+    /* 0x00 */ s32 nSize;
+    /* 0x04 */ s32 nOffsetRAM;
+    /* 0x08 */ s32 nOffsetROM;
+    /* 0x0C */ SystemCopyCallbackFunc pCallback;
+} SystemRomCopy; // size = 0x10
+
+typedef struct System {
+    /* 0x00 */ void* pFrame;
+    /* 0x04 */ void* pSound;
+    /* 0x08 */ bool bException;
+    /* 0x0C */ SystemMode eMode;
+    /* 0x10 */ SystemRomCopy romCopy;
+    /* 0x20 */ SystemRomType eTypeROM;
+    /* 0x24 */ void* apObject[SOT_COUNT];
+    /* 0x68 */ u64 nAddressBreak;
+    /* 0x70 */ SystemObjectType storageDevice;
+    /* 0x74 */ u8 anException[16];
+    /* 0x84 */ bool bJapaneseVersion;
+} System; // size = 0x88
+
+#elif IS_WII && IS_OOT
+
 typedef struct System {
     /* 0x00 */ bool bException;
     /* 0x04 */ SystemMode eMode;
@@ -63,9 +114,9 @@ typedef struct System {
     /* 0xC8 */ u8 anException[16];
 } System; // size = 0xD8
 
-#elif IS_MM
+#elif IS_WII && IS_MM
 
-//! TODO: figure out the System struct on MM
+// TODO: figure out the System struct on MM
 typedef struct System {
     char unk_0x00[0x28];
     void* apObject[SOT_COUNT];
@@ -77,6 +128,7 @@ typedef struct Ram {
     /* 0x00 */ void* pHost;
     /* 0x04 */ u8* pBuffer;
     /* 0x08 */ u32 nSize;
+#if IS_WII
     /* 0x0C */ u32 RDRAM_CONFIG_REG;
     /* 0x10 */ u32 RDRAM_DEVICE_ID_REG;
     /* 0x14 */ u32 RDRAM_DELAY_REG;
@@ -92,6 +144,7 @@ typedef struct Ram {
     /* 0x3C */ u32 RI_SELECT_REG;
     /* 0x40 */ u32 RI_REFRESH_REG;
     /* 0x44 */ u32 RI_LATENCY_REG;
+#endif
 } Ram; // size = 0x48
 
 #define SYSTEM_CPU(pSystem) ((void*)(((System*)(pSystem))->apObject[SOT_CPU]))
@@ -133,6 +186,15 @@ void OSSuspendThread(OSThread* thread);
 s64 OSGetTime(void);
 u32 OSGetTick(void);
 
+extern s32 ganMapGPR[32];
+extern System* gpSystem;
+
+// TODO: use decomp types and names
+#define cur_thread  (*(volatile OSThread**)0x800000C0)
+#define ex_handlers ((volatile OSExceptionHandler*)0x80003000)
+
+#if IS_WII
+
 int IOS_OpenAsync(const char* file, int mode, void* callback, void* callback_data);
 int IOS_Open(const char* file, int mode);
 int IOS_CloseAsync(int fd, void* callback, void* callback_data);
@@ -153,16 +215,13 @@ int iosCreateHeap(void* heap, size_t size);
 void* iosAllocAligned(int hid, size_t size, size_t page_size);
 bool iosFree(int hid, void* ptr);
 
-extern s32 ganMapGPR[32];
-extern System* gpSystem;
 extern u32 reset_flag; // TODO: use decomp name
 
-// TODO: use decomp types and names
-#define cur_thread           (*(volatile OSThread**)0x800000C0)
-#define ex_handlers          ((volatile OSExceptionHandler*)0x80003000)
 #define title_id             (*(volatile u32*)0x80003180)
 
 #define ios_heap_addr        0x933E8000
 #define allocMEM2(ptr, size) xlHeapTake((void**)(ptr), (0x70000000 | (size)))
+
+#endif
 
 #endif

@@ -7,6 +7,8 @@
 #include "types.h"
 #include "vc.h"
 
+#if IS_WII
+
 typedef struct {
     uint32_t cmd;
     uint32_t cmd_type;
@@ -624,3 +626,5 @@ bool sdio_is_initialized(void) {
 bool sdio_is_sdhc(void) {
     return sd0_sdhc;
 }
+
+#endif
