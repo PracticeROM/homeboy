@@ -1,10 +1,10 @@
-#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 
 #include "homeboy.h"
 #include "io.h"
 #include "sd.h"
+#include "types.h"
 #include "vc.h"
 
 typedef struct {

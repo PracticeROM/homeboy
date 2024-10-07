@@ -1,12 +1,12 @@
 #ifndef _FS_H
 #define _FS_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include "homeboy.h"
 #include "io.h"
+#include "types.h"
 
 #define FS_ERROR_EACCES        -1
 #define FS_ERROR_EEXIST        -2
