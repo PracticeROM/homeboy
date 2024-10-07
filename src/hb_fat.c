@@ -5,6 +5,7 @@
 #include "hb_heap.h"
 #include "homeboy.h"
 #include "sys.h"
+#include "types.h"
 #include "vc.h"
 
 #if HB_FAT

@@ -15,4 +15,10 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
+// Ensure bool is 4 bytes to match decomp
+typedef int bool;
+
+#define true  1
+#define false 0
+
 #endif

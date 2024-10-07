@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +5,7 @@
 #include "cpu.h"
 #include "fs.h"
 #include "io.h"
+#include "types.h"
 #include "vc.h"
 
 typedef struct {

@@ -1,8 +1,9 @@
 #ifndef _SD_H
 #define _SD_H
 
-#include <stdbool.h>
 #include <stdint.h>
+
+#include "types.h"
 
 #define SDIO_HEAPSIZE                (0x5000)
 

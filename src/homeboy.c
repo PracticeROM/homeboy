@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +7,7 @@
 #include "fs.h"
 #include "homeboy.h"
 #include "sd.h"
+#include "types.h"
 #include "vc.h"
 
 int hb_hid = -1;

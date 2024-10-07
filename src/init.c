@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -12,6 +11,7 @@
 #include "homeboy.h"
 #include "hooks.h"
 #include "sys.h"
+#include "types.h"
 #include "vc.h"
 
 #define HB_HEAPSIZE 0xD000

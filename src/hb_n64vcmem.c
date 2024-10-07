@@ -1,8 +1,8 @@
-#include <stdbool.h>
 #include <stddef.h>
 
 #include "hb_n64vcmem.h"
 #include "homeboy.h"
+#include "types.h"
 
 #if HB_N64VCMEM
 static void* hb_n64vcmem_dummy = NULL;

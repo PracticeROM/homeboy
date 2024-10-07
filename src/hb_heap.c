@@ -1,6 +1,5 @@
-#include <stdbool.h>
-
 #include "hb_heap.h"
+#include "types.h"
 
 class_hb_heap_t* hb_heap_obj = NULL;
 int hb_heap_event(void* heap_p, int event, void* arg);
