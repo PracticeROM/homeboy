@@ -8,6 +8,8 @@
 #include "types.h"
 #include "vc.h"
 
+#if IS_WII
+
 typedef struct {
     /* 0x0000 */ char filepath[64];
     /* 0x0040 */ union {
@@ -142,3 +144,5 @@ int fs_delete(char* path) {
     memcpy(fs_buf->filepath, path, strlen(path) + 1);
     return IOS_Ioctl(fs_fd, 7, fs_buf->filepath, 64, NULL, 0);
 }
+
+#endif

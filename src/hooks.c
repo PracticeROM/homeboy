@@ -1,9 +1,17 @@
 #include "hooks.h"
+#include "rom.h"
 #include "types.h"
 #include "vc.h"
 
-extern u8 vc_crash_hook_addr_ha[];
-extern u8 vc_crash_hook_addr_l[];
+extern u8 cpuExecuteCall_hook_addr_ha[];
+extern u8 cpuExecuteCall_hook_addr_l[];
+
+#if IS_GC
+extern u8 videoForceRetrace[];
+extern u8 romSetCacheSize_hook_addr[];
+extern u8 romLoadRange_hook_addr_1[];
+extern u8 romLoadRange_hook_addr_2[];
+#endif
 
 // Change an instruction in memory.
 void patch_instruction(void* addr, u32 value) {
@@ -43,7 +51,7 @@ void patch_bl(void* addr, void* target) {
 
 // Replaces cpuExecuteCall, patches VC crashes by moving the call to cpuExecuteUpdate earlier.
 // See https://pastebin.com/V6ANmXt8
-static s32 vc_crash_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddressGCN) {
+static s32 cpuExecuteCall_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddressGCN) {
     s32 nReg;
     s32 count;
     s32* anCode;
@@ -128,8 +136,42 @@ static s32 vc_crash_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddressGCN
     return nAddressGCNCall;
 }
 
+#if IS_GC
+
+bool romSetCacheSize_hook(Rom* pROM, s32 nSize) {
+    s32 nSizeCacheRAM = 0x400000; // 4 MiB
+
+    pROM->nSizeCacheRAM = nSizeCacheRAM;
+    pROM->nCountBlockRAM = nSizeCacheRAM / 0x2000;
+
+    if (!xlHeapTake(&pROM->pBuffer, nSizeCacheRAM | 0x30000000)) {
+        return false;
+    }
+
+    pROM->pCacheRAM = (u8*)pROM->pBuffer;
+    return true;
+}
+
+#endif
+
 void init_hooks(void) {
     // Replace reference to cpuExecuteCall in cpuExecute
-    patch_ha(vc_crash_hook_addr_ha, vc_crash_hook);
-    patch_l(vc_crash_hook_addr_l, vc_crash_hook);
+    patch_ha(cpuExecuteCall_hook_addr_ha, cpuExecuteCall_hook);
+    patch_l(cpuExecuteCall_hook_addr_l, cpuExecuteCall_hook);
+
+#if IS_GC
+    // Patches videoForceRetrace so that DMA can proceed even if N64 VI registers
+    // or not yet initialized (required for gz to load).
+    // https://decomp.me/scratch/MgT6o
+    patch_instruction(videoForceRetrace + 0x24, 0x41820010); // beq- +0x10
+    patch_instruction(videoForceRetrace + 0x30, 0x40820024); // bne- +0x24
+
+    // Patches call to romSetCacheSize in systemSetupGameRAM
+    patch_bl(romSetCacheSize_hook_addr, romSetCacheSize_hook);
+
+    // Patches romLoadRange size to load less ROM permanently into cache. This will
+    // load to about the end of objects, skipping place names and skyboxes.
+    patch_instruction(romLoadRange_hook_addr_1, 0x3CA0012D); // lis r5, 0x12D
+    patch_instruction(romLoadRange_hook_addr_2, 0x3CA0012D); // lis r5, 0x12D
+#endif
 }
