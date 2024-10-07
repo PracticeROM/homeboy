@@ -16,12 +16,12 @@
 
 #define HB_HEAPSIZE 0xD000
 
-INIT bool _start(void** dest, size_t size) {
-    if (!ramSetSize(dest, 0x00800000)) {
+INIT bool _start(Ram* pRAM, s32 nSize) {
+    if (!ramSetSize(pRAM, 0x00800000)) {
         return 0;
     }
 
-    n64_dram = dest[1];
+    n64_dram = pRAM->pBuffer;
 
     init_hooks();
     homeboy_init();

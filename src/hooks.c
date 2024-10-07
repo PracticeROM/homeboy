@@ -1,27 +1,28 @@
 #include "hooks.h"
+#include "types.h"
 #include "vc.h"
 
-extern uint8_t vc_crash_hook_addr_ha[];
-extern uint8_t vc_crash_hook_addr_l[];
+extern u8 vc_crash_hook_addr_ha[];
+extern u8 vc_crash_hook_addr_l[];
 
 // Change an instruction in memory.
-void patch_instruction(void* addr, uint32_t value) {
-    *(volatile uint32_t*)addr = value;
-    DCStoreRange((uint32_t*)addr, sizeof(uint32_t));
-    ICInvalidateRange((uint32_t*)addr, sizeof(uint32_t));
+void patch_instruction(void* addr, u32 value) {
+    *(volatile u32*)addr = value;
+    DCStoreRange((u32*)addr, sizeof(u32));
+    ICInvalidateRange((u32*)addr, sizeof(u32));
 }
 
 // Patch the address of an @ha relocation.
 void patch_ha(void* addr, void* target) {
-    uint32_t inst = *(volatile uint32_t*)addr;
-    uint32_t lo;
-    uint32_t hi;
+    u32 inst = *(volatile u32*)addr;
+    u32 lo;
+    u32 hi;
 
-    lo = (uint32_t)target & 0xFFFF;
+    lo = (u32)target & 0xFFFF;
     if (lo & 0x8000) {
-        hi = ((uint32_t)target + 0x10000) >> 16;
+        hi = ((u32)target + 0x10000) >> 16;
     } else {
-        hi = (uint32_t)target >> 16;
+        hi = (u32)target >> 16;
     }
 
     patch_instruction(addr, (inst & 0xFFFF0000) | (hi & 0xFFFF));
@@ -29,33 +30,33 @@ void patch_ha(void* addr, void* target) {
 
 // Patch the address of an @l relocation.
 void patch_l(void* addr, void* target) {
-    uint32_t inst = *(volatile uint32_t*)addr;
-    uint32_t lo = (uint32_t)target & 0xFFFF;
+    u32 inst = *(volatile u32*)addr;
+    u32 lo = (u32)target & 0xFFFF;
 
     patch_instruction(addr, (inst & 0xFFFF0000) | (lo & 0xFFFF));
 }
 
 // Change a function call in memory to call a different function instead.
 void patch_bl(void* addr, void* target) {
-    patch_instruction(addr, 0x48000001 | (((uint8_t*)target - (uint8_t*)addr) & 0x03FFFFFC));
+    patch_instruction(addr, 0x48000001 | (((u8*)target - (u8*)addr) & 0x03FFFFFC));
 }
 
 // Replaces cpuExecuteCall, patches VC crashes by moving the call to cpuExecuteUpdate earlier.
 // See https://pastebin.com/V6ANmXt8
-static int32_t vc_crash_hook(Cpu* pCPU, int32_t nCount, int32_t nAddressN64, int32_t nAddressGCN) {
-    int32_t nReg;
-    int32_t count;
-    int32_t* anCode;
-    int32_t saveGCN;
+static s32 vc_crash_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddressGCN) {
+    s32 nReg;
+    s32 count;
+    s32* anCode;
+    s32 saveGCN;
     CpuFunction* node;
     CpuCallerID* block;
-    int32_t nDeltaAddress;
-    int32_t nAddressGCNCall;
+    s32 nDeltaAddress;
+    s32 nAddressGCNCall;
 
 #if IS_OOT
     nCount = OSGetTick();
 #elif IS_MM
-    int64_t nTime = OSGetTime();
+    s64 nTime = OSGetTime();
 #endif
 
     if (pCPU->nWaitPC != 0) {
@@ -67,7 +68,7 @@ static int32_t vc_crash_hook(Cpu* pCPU, int32_t nCount, int32_t nAddressN64, int
     pCPU->nMode |= 4;
     pCPU->nPC = nAddressN64;
 
-    pCPU->aGPR[31].int32_t = nAddressGCN;
+    pCPU->aGPR[31].s32 = nAddressGCN;
     saveGCN = nAddressGCN - 4;
 
     pCPU->survivalTimer++;
@@ -93,21 +94,21 @@ static int32_t vc_crash_hook(Cpu* pCPU, int32_t nCount, int32_t nAddressN64, int
     }
 
     saveGCN = (ganMapGPR[31] & 0x100) ? true : false;
-    anCode = (int32_t*)nAddressGCN - (saveGCN ? 4 : 3);
+    anCode = (s32*)nAddressGCN - (saveGCN ? 4 : 3);
     if (saveGCN) {
-        anCode[0] = 0x3CA00000 | ((uint32_t)nAddressGCN >> 16);
-        anCode[1] = 0x60A50000 | ((uint32_t)nAddressGCN & 0xFFFF);
+        anCode[0] = 0x3CA00000 | ((u32)nAddressGCN >> 16);
+        anCode[1] = 0x60A50000 | ((u32)nAddressGCN & 0xFFFF);
         DCStoreRange(anCode, 8);
         ICInvalidateRange(anCode, 8);
     } else {
         nReg = ganMapGPR[31];
-        anCode[0] = 0x3C000000 | ((uint32_t)nAddressGCN >> 16) | (nReg << 21);
-        anCode[1] = 0x60000000 | ((uint32_t)nAddressGCN & 0xFFFF) | (nReg << 21) | (nReg << 16);
+        anCode[0] = 0x3C000000 | ((u32)nAddressGCN >> 16) | (nReg << 21);
+        anCode[1] = 0x60000000 | ((u32)nAddressGCN & 0xFFFF) | (nReg << 21) | (nReg << 16);
         DCStoreRange(anCode, 8);
         ICInvalidateRange(anCode, 8);
     }
 
-    nDeltaAddress = (uint8_t*)nAddressGCNCall - (uint8_t*)&anCode[3];
+    nDeltaAddress = (u8*)nAddressGCNCall - (u8*)&anCode[3];
     if (saveGCN) {
         anCode[3] = 0x48000000 | (nDeltaAddress & 0x03FFFFFC);
         DCStoreRange(anCode, 16);
