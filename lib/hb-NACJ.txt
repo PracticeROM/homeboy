@@ -6,6 +6,7 @@ cpuSetDeviceGet                     = 0x8003C7B0;
 cpuSetDevicePut                     = 0x8003C7C8;
 cpuFindFunction                     = 0x8003DC4C;
 ramSetSize                          = 0x80041D7C;
+frameSetDepth_hook_addr             = 0x8007E774;
 xlHeapTake                          = 0x800810F8;
 xlHeapFree                          = 0x8008136C;
 xlObjectMake                        = 0x800821F4;
