@@ -1,10 +1,12 @@
 #include "hooks.h"
+#include "frame.h"
 #include "rom.h"
 #include "types.h"
 #include "vc.h"
 
 extern u8 cpuExecuteCall_hook_addr_ha[];
 extern u8 cpuExecuteCall_hook_addr_l[];
+extern u8 frameSetDepth_hook_addr[];
 
 #if IS_GC
 extern u8 videoForceRetrace[];
@@ -136,6 +138,18 @@ static s32 cpuExecuteCall_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddr
     return nAddressGCNCall;
 }
 
+// Replaces frameSetDepth, correctly converts N64 depth value to GC/Wii depth value.
+// In frameDrawSetup2D (used for gSPFillRectangle), the GC/Wii projection matrix is
+// set up so that the near plane is at 0 (z=0) and the far plane is at 1001 (z=-1001).
+// Meanwhile, the depth value passed to frameSetDepth is in the range [0, 1], so any
+// depth other than 0 is outside the GC/Wii view frustrum. This doesn't affect anything
+// in-game, but we fix it here for gz.
+bool frameSetDepth_hook(Frame* pFrame, f32 rDepth, f32 rDelta) {
+    pFrame->rDepth = rDepth * -1001.0f;
+    pFrame->rDelta = rDelta;
+    return true;
+}
+
 #if IS_GC
 
 bool romSetCacheSize_hook(Rom* pROM, s32 nSize) {
@@ -158,6 +172,9 @@ void init_hooks(void) {
     // Replace reference to cpuExecuteCall in cpuExecute
     patch_ha(cpuExecuteCall_hook_addr_ha, cpuExecuteCall_hook);
     patch_l(cpuExecuteCall_hook_addr_l, cpuExecuteCall_hook);
+
+    // Replace call to frameSetDepth in rdbParseGBI
+    patch_bl(frameSetDepth_hook_addr, frameSetDepth_hook);
 
 #if IS_GC
     // Patches videoForceRetrace so that DMA can proceed even if N64 VI registers
