@@ -18,7 +18,7 @@
 #define HB_HEAPSIZE 0xD000
 
 /**
- * @brief Fix `gnFlagZelda` not being set properly.
+ * @brief Fix `gnFlagZelda` not being set properly on GameCube versions.
  *
  * It checks the rom's filename and set the flag to 1 if it's an MQ rom, otherwise the value used will be 2.
  * The emulator checks the bits of the flag's value, if the bit 2 is set (from `gnFlagZelda & 2`), it will use non-MQ
@@ -30,7 +30,7 @@ static void patch_gnFlagZelda(void) {
 
     // MQ roms are named "urazlj_f.n64", checking the first 3 characters will tell if the game used is MQ or not.
     if (pROM->acNameFile[0] == 'u' && pROM->acNameFile[1] == 'r' && pROM->acNameFile[2] == 'a') {
-        gnFlagZelda = 1;
+        gnFlagZelda = 0;
     } else {
         gnFlagZelda = 2;
     }
