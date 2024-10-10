@@ -148,6 +148,7 @@ typedef struct Ram {
 } Ram; // size = 0x48
 
 #define SYSTEM_CPU(pSystem) ((void*)(((System*)(pSystem))->apObject[SOT_CPU]))
+#define SYSTEM_ROM(pSystem) ((Rom*)(((System*)(pSystem))->apObject[SOT_ROM]))
 
 // xlObject.h
 typedef struct _XL_OBJECTTYPE _XL_OBJECTTYPE;
@@ -188,6 +189,7 @@ u32 OSGetTick(void);
 
 extern s32 ganMapGPR[32];
 extern System* gpSystem;
+extern u32 gnFlagZelda;
 
 // TODO: use decomp types and names
 #define cur_thread  (*(volatile OSThread**)0x800000C0)

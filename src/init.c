@@ -10,16 +10,38 @@
 #include "hb_n64vcmem.h"
 #include "homeboy.h"
 #include "hooks.h"
+#include "rom.h"
 #include "sys.h"
 #include "types.h"
 #include "vc.h"
 
 #define HB_HEAPSIZE 0xD000
 
+/**
+ * @brief Fix `gnFlagZelda` not being set properly.
+ * 
+ * It checks the rom's filename and set the flag to 1 if it's an MQ rom, otherwise the value used will be 2.
+ * The emulator checks the bits of the flag's value, if the bit 2 is set (from `gnFlagZelda & 2`), it will use non-MQ mode.
+ */
+static void patch_gnFlagZelda(void) {
+#if IS_GC
+    Rom* pROM = SYSTEM_ROM(gpSystem);
+
+    // MQ roms are named "urazlj_f.n64", checking the first 3 characters will tell if the game used is MQ or not.
+    if (pROM->acNameFile[0] == 'u' && pROM->acNameFile[1] == 'r' && pROM->acNameFile[2] == 'a') {
+        gnFlagZelda = 1;
+    } else {
+        gnFlagZelda = 2;
+    }
+#endif
+}
+
 INIT bool _start(Ram* pRAM, s32 nSize) {
     if (!ramSetSize(pRAM, 0x00800000)) {
-        return 0;
+        return false;
     }
+
+    patch_gnFlagZelda();
 
     n64_dram = pRAM->pBuffer;
 
@@ -75,5 +97,5 @@ INIT bool _start(Ram* pRAM, s32 nSize) {
     }
 #endif
 
-    return 1;
+    return true;
 }
