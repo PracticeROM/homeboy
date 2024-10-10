@@ -19,9 +19,10 @@
 
 /**
  * @brief Fix `gnFlagZelda` not being set properly.
- * 
+ *
  * It checks the rom's filename and set the flag to 1 if it's an MQ rom, otherwise the value used will be 2.
- * The emulator checks the bits of the flag's value, if the bit 2 is set (from `gnFlagZelda & 2`), it will use non-MQ mode.
+ * The emulator checks the bits of the flag's value, if the bit 2 is set (from `gnFlagZelda & 2`), it will use non-MQ
+ * mode.
  */
 static void patch_gnFlagZelda(void) {
 #if IS_GC
