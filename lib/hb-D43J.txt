@@ -24,3 +24,4 @@ OSGetTime                           = 0x800A14E0;
 OSGetTick                           = 0x800A14F8;
 ganMapGPR                           = 0x800ED338;
 gpSystem                            = 0x8018B894;
+gnFlagZelda                         = 0x8018B968;
