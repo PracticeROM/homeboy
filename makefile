@@ -7,7 +7,7 @@ SFILES      = *.s
 SRCDIR      = src
 OBJDIR      = obj
 BINDIR      = bin
-VC_VERSIONS = D43J NACJ NACE NARJ NARE
+VC_VERSIONS = D43J D43E PZLJ PZLE NACJ NACE NARJ NARE
 NAME        = homeboy
 RESDESC     = res.json
 
@@ -20,6 +20,9 @@ ALL_OBJCOPYFLAGS    = -S -O binary --set-section-flags .bss=alloc,load,contents 
 HOMEBOY     = $(foreach v,$(VC_VERSIONS),hb-$(v))
 
 HB-D43J     = $(COBJ-hb-D43J) $(ELF-hb-D43J)
+HB-D43E     = $(COBJ-hb-D43E) $(ELF-hb-D43E)
+HB-PZLJ     = $(COBJ-hb-PZLJ) $(ELF-hb-PZLJ)
+HB-PZLE     = $(COBJ-hb-PZLE) $(ELF-hb-PZLE)
 HB-NACJ     = $(COBJ-hb-NACJ) $(ELF-hb-NACJ)
 HB-NACE     = $(COBJ-hb-NACE) $(ELF-hb-NACE)
 HB-NARJ     = $(COBJ-hb-NARJ) $(ELF-hb-NARJ)
@@ -72,6 +75,9 @@ endef
 $(foreach v,$(VC_VERSIONS),$(eval $(call bin_template,hb-$(v),homeboy)))
 
 $(HB-D43J)      : ALL_CPPFLAGS += -DVC_VERSION=D43J
+$(HB-D43E)      : ALL_CPPFLAGS += -DVC_VERSION=D43E
+$(HB-PZLJ)      : ALL_CPPFLAGS += -DVC_VERSION=PZLJ
+$(HB-PZLE)      : ALL_CPPFLAGS += -DVC_VERSION=PZLE
 $(HB-NACJ)      : ALL_CPPFLAGS += -DVC_VERSION=NACJ
 $(HB-NACE)      : ALL_CPPFLAGS += -DVC_VERSION=NACE
 $(HB-NARJ)      : ALL_CPPFLAGS += -DVC_VERSION=NARJ
