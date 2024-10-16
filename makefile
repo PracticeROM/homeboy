@@ -7,26 +7,47 @@ SFILES      = *.s
 SRCDIR      = src
 OBJDIR      = obj
 BINDIR      = bin
-VC_VERSIONS = D43J D43E PZLJ PZLE NACJ NACE NARJ NARE
+VC_VERSIONS = PZLJ PZLE
 NAME        = homeboy
 RESDESC     = res.json
 
+# either 'OOT' or 'MM'
+GAME ?= OOT
+
+ifeq ($(GAME),)
+$(error "GAME unset.")
+else ifneq ($(GAME),OOT)
+ifneq ($(GAME),MM)
+$(error "Wrong value for GAME.")
+endif
+endif
+
 ADDRESS             = 0x817F8000
-ALL_CFLAGS          = -c -Iinclude -mcpu=750 -meabi -mhard-float -G 0 -O3 -ffunction-sections -fdata-sections $(CFLAGS)
-ALL_CPPFLAGS        = $(CPPFLAGS)
+ALL_CFLAGS          = -c -Iinclude -mcpu=750 -meabi -mhard-float -G 0 -O3 -ffunction-sections -fdata-sections $(CFLAGS) -DGAME=$(GAME)
+ALL_CPPFLAGS        = $(CPPFLAGS) -DGAME=$(GAME)
 ALL_LDFLAGS         = -T build.ld -G 0 -nostartfiles -specs=nosys.specs -Wl,--gc-sections,--section-start,.init=$(ADDRESS) $(LDFLAGS)
 ALL_OBJCOPYFLAGS    = -S -O binary --set-section-flags .bss=alloc,load,contents $(OBJCOPYFLAGS)
 
-HOMEBOY     = $(foreach v,$(VC_VERSIONS),hb-$(v))
+ifeq ($(GAME),OOT)
+VC_VERSIONS += D43J D43E NACJ NACE
 
 HB-D43J     = $(COBJ-hb-D43J) $(ELF-hb-D43J)
 HB-D43E     = $(COBJ-hb-D43E) $(ELF-hb-D43E)
-HB-PZLJ     = $(COBJ-hb-PZLJ) $(ELF-hb-PZLJ)
-HB-PZLE     = $(COBJ-hb-PZLE) $(ELF-hb-PZLE)
 HB-NACJ     = $(COBJ-hb-NACJ) $(ELF-hb-NACJ)
 HB-NACE     = $(COBJ-hb-NACE) $(ELF-hb-NACE)
+endif
+
+ifeq ($(GAME),MM)
+VC_VERSIONS += NARJ NARE
+
 HB-NARJ     = $(COBJ-hb-NARJ) $(ELF-hb-NARJ)
 HB-NARE     = $(COBJ-hb-NARE) $(ELF-hb-NARE)
+endif
+
+HB-PZLJ     = $(COBJ-hb-PZLJ) $(ELF-hb-PZLJ)
+HB-PZLE     = $(COBJ-hb-PZLE) $(ELF-hb-PZLE)
+
+HOMEBOY     = $(foreach v,$(VC_VERSIONS),hb-$(v))
 
 all         : $(HOMEBOY)
 
@@ -74,11 +95,17 @@ endef
 
 $(foreach v,$(VC_VERSIONS),$(eval $(call bin_template,hb-$(v),homeboy)))
 
+ifeq ($(GAME),OOT)
 $(HB-D43J)      : ALL_CPPFLAGS += -DVC_VERSION=D43J
 $(HB-D43E)      : ALL_CPPFLAGS += -DVC_VERSION=D43E
-$(HB-PZLJ)      : ALL_CPPFLAGS += -DVC_VERSION=PZLJ
-$(HB-PZLE)      : ALL_CPPFLAGS += -DVC_VERSION=PZLE
 $(HB-NACJ)      : ALL_CPPFLAGS += -DVC_VERSION=NACJ
 $(HB-NACE)      : ALL_CPPFLAGS += -DVC_VERSION=NACE
+endif
+
+ifeq ($(GAME),MM)
 $(HB-NARJ)      : ALL_CPPFLAGS += -DVC_VERSION=NARJ
 $(HB-NARE)      : ALL_CPPFLAGS += -DVC_VERSION=NARE
+endif
+
+$(HB-PZLJ)      : ALL_CPPFLAGS += -DVC_VERSION=PZLJ
+$(HB-PZLE)      : ALL_CPPFLAGS += -DVC_VERSION=PZLE

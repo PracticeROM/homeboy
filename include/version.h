@@ -17,7 +17,10 @@
 #define IS_GC  (VC_VERSION == D43J || VC_VERSION == D43E || VC_VERSION == PZLJ || VC_VERSION == PZLE)
 #define IS_WII (VC_VERSION == NACJ || VC_VERSION == NACE || VC_VERSION == NARJ || VC_VERSION == NARE)
 
-#define IS_MM  (VC_VERSION == NARJ || VC_VERSION == NARE)
-#define IS_OOT (VC_VERSION == D43J || VC_VERSION == D43E || VC_VERSION == NACJ || VC_VERSION == NACE)
+#define OOT    0 // Ocarina of Time
+#define MM     1 // Majora's Mask
+
+#define IS_MM  (GAME == MM)
+#define IS_OOT (GAME == OOT)
 
 #endif
