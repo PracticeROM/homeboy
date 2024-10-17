@@ -68,7 +68,7 @@ static s32 cpuExecuteCall_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddr
 
 #if IS_OOT || IS_GC && IS_MM
     nCount = OSGetTick();
-#else
+#elif IS_MM
     s64 nTime = OSGetTime();
 #endif
 
@@ -92,7 +92,7 @@ static s32 cpuExecuteCall_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddr
     if (!cpuExecuteUpdate(pCPU, &nAddressGCNCall, nCount)) {
         return false;
     }
-#else
+#elif IS_MM
     if (!cpuExecuteUpdate(pCPU, &nAddressGCNCall, nTime)) {
         return false;
     }
@@ -134,7 +134,7 @@ static s32 cpuExecuteCall_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddr
 
 #if IS_OOT || IS_GC && IS_MM
     pCPU->nTickLast = OSGetTick();
-#else
+#elif IS_MM
     pCPU->nTimeLast = nTime;
 #endif
 
