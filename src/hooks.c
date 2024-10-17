@@ -1,5 +1,7 @@
-#include "hooks.h"
+#include <string.h>
+
 #include "frame.h"
+#include "hooks.h"
 #include "rom.h"
 #include "types.h"
 #include "vc.h"
@@ -13,6 +15,7 @@ extern u8 videoForceRetrace[];
 extern u8 romSetCacheSize_hook_addr[];
 extern u8 romLoadRange_hook_addr_1[];
 extern u8 romLoadRange_hook_addr_2[];
+extern u8 mcardWrite_hook_addr[];
 #endif
 
 // Change an instruction in memory.
@@ -166,6 +169,34 @@ bool romSetCacheSize_hook(Rom* pROM, s32 nSize) {
     return true;
 }
 
+bool mcardWrite_hook(MemCard* pMCard, s32 address, s32 size, char* data) {
+    // if it's a gz save, run the non-OoT logic of mcardWrite (copy-pasted here)
+    // otherwise, call the real mcardWrite to keep the original behavior for a game save
+    if (address == 0x7A00) {
+        memcpy(&pMCard->file.game.buffer[address], data, size);
+
+        if (pMCard->saveToggle == true) {
+            simulatorRumbleStop(0);
+            if (!mcardUpdate()) {
+                return false;
+            }
+        } else {
+            pMCard->saveToggle = true;
+            pMCard->wait = false;
+            mcardOpenDuringGame(pMCard);
+            if (pMCard->saveToggle == true) {
+                if (!mcardUpdate()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    return mcardWrite(pMCard, address, size, data);
+}
+
 #endif
 
 void init_hooks(void) {
@@ -190,5 +221,8 @@ void init_hooks(void) {
     // load to about the end of objects, skipping place names and skyboxes.
     patch_instruction(romLoadRange_hook_addr_1, 0x3CA0012D); // lis r5, 0x12D
     patch_instruction(romLoadRange_hook_addr_2, 0x3CA0012D); // lis r5, 0x12D
+
+    // Hook to mcardWrite to fix gz settings not saving
+    patch_bl(mcardWrite_hook_addr, mcardWrite_hook);
 #endif
 }

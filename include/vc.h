@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "cpu.h"
+#include "mcardGCN.h"
 #include "os.h"
 #include "version.h"
 
@@ -172,6 +173,10 @@ bool cpuSetDeviceGet(Cpu* pCPU, CpuDevice* pDevice, void* pfGet8, void* pfGet16,
 bool cpuSetDevicePut(Cpu* pCPU, CpuDevice* pDevice, void* pfPut8, void* pfPut16, void* pfPut32, void* pfPut64);
 bool cpuFindFunction(Cpu* pCPU, s32 theAddress, CpuFunction** tree_node);
 bool ramSetSize(Ram* pRAM, s32 nSize);
+bool simulatorRumbleStop(s32 channel);
+bool mcardWrite(MemCard* pMCard, s32 address, s32 size, char* data);
+bool mcardOpenDuringGame(MemCard* pMCard);
+bool mcardUpdate(void);
 bool xlHeapTake(void** ppHeap, s32 nByteCount);
 bool xlHeapFree(void** ppHeap);
 bool xlObjectMake(void** ppObject, void* pArgument, _XL_OBJECTTYPE* pType);
