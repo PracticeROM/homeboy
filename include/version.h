@@ -6,15 +6,21 @@
 #endif
 
 #define D43J   0 // GameCube OOT Master Quest Japan
-#define NACJ   1 // Wii OOT Japan
-#define NACE   2 // Wii OOT US
-#define NARJ   3 // Wii MM Japan
-#define NARE   4 // Wii MM US
+#define D43E   1 // GameCube OOT Master Quest US
+#define PZLJ   2 // GameCube OOT Collector's Edition Japan
+#define PZLE   3 // GameCube OOT Collector's Edition US
+#define NACJ   4 // Wii OOT Japan
+#define NACE   5 // Wii OOT US
+#define NARJ   6 // Wii MM Japan
+#define NARE   7 // Wii MM US
 
-#define IS_GC  (VC_VERSION == D43J)
+#define IS_GC  (VC_VERSION == D43J || VC_VERSION == D43E || VC_VERSION == PZLJ || VC_VERSION == PZLE)
 #define IS_WII (VC_VERSION == NACJ || VC_VERSION == NACE || VC_VERSION == NARJ || VC_VERSION == NARE)
 
-#define IS_MM  (VC_VERSION == NARJ || VC_VERSION == NARE)
-#define IS_OOT (VC_VERSION == D43J || VC_VERSION == NACJ || VC_VERSION == NACE)
+#define OOT    0 // Ocarina of Time
+#define MM     1 // Majora's Mask
+
+#define IS_MM  (GAME == MM)
+#define IS_OOT (GAME == OOT)
 
 #endif
