@@ -11,11 +11,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - OOT: 'hb-D43J hb-D43E hb-PZLJ hb-PZLE hb-NACJ hb-NACE'
-          - MM: 'hb-NARJ hb-NARE CPPFLAGS="-DHB_DBG -DHB_HEAP -DHB_FAT -DHB_N64VCMEM"'
+          - name: OOT
+            args: 'hb-D43J hb-D43E hb-PZLJ hb-PZLE hb-NACJ hb-NACE'
+          - name: MM
+            args: 'hb-NARJ hb-NARE CPPFLAGS="-DHB_DBG -DHB_HEAP -DHB_FAT -DHB_N64VCMEM"'
     defaults:
       run:
         shell: bash
+
+    name: ${{ matrix.name }}
 
     steps:
     # Checkout the repository (shallow clone)
@@ -31,4 +35,4 @@ jobs:
 
     # Build the project
     - name: Build
-      run: make ${{ matrix.OOT }} ${{ matrix.MM }}
+      run: make ${{ matrix.ARGS }}
