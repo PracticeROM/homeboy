@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #include "cpu.h"
-#include "os.h"
 #include "mcardGCN.h"
+#include "os.h"
 #include "version.h"
 
 #define INIT __attribute__((section(".init")))

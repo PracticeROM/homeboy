@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "hooks.h"
 #include "frame.h"
+#include "hooks.h"
 #include "rom.h"
 #include "types.h"
 #include "vc.h"

@@ -1,8 +1,8 @@
 #ifndef _MCARDGCN_H
 #define _MCARDGCN_H
 
-#include "types.h"
 #include "os.h"
+#include "types.h"
 #include "version.h"
 
 #if IS_GC
