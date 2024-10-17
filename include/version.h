@@ -38,4 +38,20 @@
 #error "Unknown version"
 #endif
 
+#ifndef IS_GC
+#define IS_GC 0
+#endif
+
+#ifndef IS_WII
+#define IS_WII 0
+#endif
+
+#ifndef IS_OOT
+#define IS_OOT 0
+#endif
+
+#ifndef IS_MM
+#define IS_MM 0
+#endif
+
 #endif

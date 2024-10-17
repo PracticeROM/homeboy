@@ -19,7 +19,7 @@ RESDESC     = res.json
 
 ADDRESS             = 0x817F8000
 ALL_CFLAGS          = -c -Iinclude -mcpu=750 -meabi -mhard-float -G 0 -O3 -ffunction-sections -fdata-sections $(CFLAGS)
-ALL_CPPFLAGS        = $(CPPFLAGS) -DGAME=$(GAME)
+ALL_CPPFLAGS        = $(CPPFLAGS)
 ALL_LDFLAGS         = -T build.ld -G 0 -nostartfiles -specs=nosys.specs -Wl,--gc-sections,--section-start,.init=$(ADDRESS) $(LDFLAGS)
 ALL_OBJCOPYFLAGS    = -S -O binary --set-section-flags .bss=alloc,load,contents $(OBJCOPYFLAGS)
 
