@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    container: devkitpro/devkitppc:latest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: OOT
+            args: 'hb-D43J hb-D43E hb-PZLJ hb-PZLE hb-NACJ hb-NACE'
+          - name: MM
+            args: 'hb-NARJ hb-NARE CPPFLAGS="-DHB_DBG -DHB_HEAP -DHB_FAT -DHB_N64VCMEM"'
+    defaults:
+      run:
+        shell: bash
+
+    name: ${{ matrix.name }}
+
+    steps:
+    # Checkout the repository (shallow clone)
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    # Set Git config
+    - name: Git config
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+    # Build the project
+    - name: Build
+      run: make ${{ matrix.args }}

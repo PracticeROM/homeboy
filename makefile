@@ -1,29 +1,25 @@
-CC          = powerpc-eabi-gcc
-AS          = powerpc-eabi-gcc -x assembler-with-cpp
+ifneq ($(strip $(DEVKITPPC)),)
+PREFIX      = $(DEVKITPPC)/bin/powerpc-eabi-
+else
+PREFIX      = powerpc-eabi-
+endif
+
+CC          = $(PREFIX)gcc
+AS          = $(PREFIX)gcc -x assembler-with-cpp
 LD          = $(CC)
-OBJCOPY     = powerpc-eabi-objcopy
+OBJCOPY     = $(PREFIX)objcopy
 CFILES      = *.c
 SFILES      = *.s
 SRCDIR      = src
 OBJDIR      = obj
 BINDIR      = bin
+VC_VERSIONS = D43J D43E PZLJ PZLE NACJ NACE NARJ NARE
 NAME        = homeboy
 RESDESC     = res.json
 
-# either 'OOT' or 'MM'
-GAME ?= OOT
-
-ifeq ($(GAME),OOT)
-VC_VERSIONS = D43J D43E PZLJ PZLE NACJ NACE
-else ifeq ($(GAME),MM)
-VC_VERSIONS = PZLJ PZLE NARJ NARE
-else
-$(error "Wrong value for GAME.")
-endif
-
 ADDRESS             = 0x817F8000
 ALL_CFLAGS          = -c -Iinclude -mcpu=750 -meabi -mhard-float -G 0 -O3 -ffunction-sections -fdata-sections $(CFLAGS)
-ALL_CPPFLAGS        = $(CPPFLAGS) -DGAME=$(GAME)
+ALL_CPPFLAGS        = $(CPPFLAGS)
 ALL_LDFLAGS         = -T build.ld -G 0 -nostartfiles -specs=nosys.specs -Wl,--gc-sections,--section-start,.init=$(ADDRESS) $(LDFLAGS)
 ALL_OBJCOPYFLAGS    = -S -O binary --set-section-flags .bss=alloc,load,contents $(OBJCOPYFLAGS)
 
