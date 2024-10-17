@@ -35,4 +35,4 @@ jobs:
 
     # Build the project
     - name: Build
-      run: make ${{ matrix.ARGS }}
+      run: make ${{ matrix.args }}
