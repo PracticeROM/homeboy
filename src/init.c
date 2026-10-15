@@ -48,6 +48,11 @@ INIT bool _start(Ram* pRAM, s32 nSize) {
 
     init_hooks();
     homeboy_init();
+#if IS_GC
+    if (homeboy_obj != NULL) {
+        homeboy_obj->key = 0x1234;
+    }
+#endif
 #ifdef HB_HEAP
     homeboy_heap_init();
 #endif

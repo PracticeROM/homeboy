@@ -83,6 +83,23 @@
 #define SD_ERROR_NOBUFFER            4
 #define SD_ERROR_OTHER               5
 
+#define SDIO_ERROR_NONE              0
+#define SDIO_ERROR_NO_EXI            1
+#define SDIO_ERROR_IDLE_CLOCKS       2
+#define SDIO_ERROR_CMD0              3
+#define SDIO_ERROR_CMD8              4
+#define SDIO_ERROR_ACMD41            5
+#define SDIO_ERROR_CMD58             6
+#define SDIO_ERROR_SET_BLOCKLEN      7
+#define SDIO_ERROR_READ_CMD          8
+#define SDIO_ERROR_READ_DATA         9
+#define SDIO_ERROR_READ_STOP         10
+#define SDIO_ERROR_WRITE_CMD         11
+#define SDIO_ERROR_WRITE_DATA        12
+#define SDIO_ERROR_WRITE_STOP        13
+#define SDIO_ERROR_WRITE_REJECTED     14
+#define SDIO_ERROR_WRITE_BUSY_TIMEOUT 15
+
 bool sdio_is_initialized(void);
 bool sdio_is_inserted(void);
 bool sdio_is_sdhc(void);
@@ -90,5 +107,7 @@ bool sdio_write_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer);
 bool sdio_read_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer);
 bool sdio_stop(void);
 bool sdio_start(void);
+uint32_t sdio_get_error(void);
+uint32_t sdio_get_error_detail(void);
 
 #endif
