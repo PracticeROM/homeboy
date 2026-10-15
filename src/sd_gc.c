@@ -559,7 +559,7 @@ bool sdio_start(void) {
             sd_read_data_block(csd, sizeof(csd))) {
             u8 transfer_speed = csd[3];
             u8 speed_unit = transfer_speed & 7;
-    
+
             if (speed_unit <= 3) {
                 u8 frequency = sd_clock_div[(((transfer_speed >> 3) & 0xF) * 4) + speed_unit];
                 if (frequency != 0xFF) {
