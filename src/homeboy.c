@@ -46,8 +46,16 @@ static void do_write() {
     if (sdio_write_sectors(homeboy_obj->write_lba, homeboy_obj->block_cnt,
                            (void*)((char*)n64_dram + homeboy_obj->addr))) {
         homeboy_obj->error = SD_ERROR_SUCCESS;
+#if IS_GC
+        homeboy_obj->status &= 0x0000FFFF;
+#endif
     } else {
+#if IS_GC
+        homeboy_obj->error = sdio_get_error();
+        homeboy_obj->status = (homeboy_obj->status & 0x0000FFFF) | ((sdio_get_error_detail() & 0xFFFF) << 16);
+#else
         homeboy_obj->error = SD_ERROR_INVAL;
+#endif
     }
 
     homeboy_obj->ready = 1;
@@ -62,7 +70,11 @@ static void do_read() {
                           (void*)((char*)n64_dram + homeboy_obj->addr))) {
         homeboy_obj->error = SD_ERROR_SUCCESS;
     } else {
+#if IS_GC
+        homeboy_obj->error = sdio_get_error();
+#else
         homeboy_obj->error = SD_ERROR_INVAL;
+#endif
     }
 
     homeboy_obj->ready = 1;
@@ -104,7 +116,11 @@ static void do_status_update() {
             homeboy_obj->sdhc = sdio_is_sdhc();
             homeboy_obj->ready = 1;
         } else {
+#if IS_GC
+            homeboy_obj->error = sdio_get_error();
+#else
             homeboy_obj->error = SD_ERROR_INVAL;
+#endif
         }
 
         homeboy_obj->busy = 0;

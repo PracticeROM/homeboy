@@ -48,6 +48,7 @@ INIT bool _start(Ram* pRAM, s32 nSize) {
 
     init_hooks();
     homeboy_init();
+
 #ifdef HB_HEAP
     homeboy_heap_init();
 #endif
@@ -64,7 +65,11 @@ INIT bool _start(Ram* pRAM, s32 nSize) {
     init_hb_exceptions();
 #endif
 
-#if IS_WII
+#if IS_GC
+    if (homeboy_obj != NULL) {
+        homeboy_obj->key = 0x1234;
+    }
+#elif IS_WII
     if (hb_hid < 0) {
         hb_hid = iosCreateHeap((void*)ios_heap_addr, HB_HEAPSIZE);
     }
