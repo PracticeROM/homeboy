@@ -3,10 +3,15 @@
 
 #include "os.h"
 #include "sd.h"
-#include "sd_gc_internal.h"
 #include "version.h"
 
 #if IS_GC
+
+extern OSTick OSGetTick(void);
+extern bool sd_gc_exi_present(s32 channel);
+extern bool sd_gc_exi_begin(s32 channel, u32 frequency, bool select_device);
+extern bool sd_gc_exi_end(s32 channel);
+extern bool sd_gc_exi_transfer(s32 channel, u8* data, u32 length, u32 mode);
 
 #define SD_GC_CHANNEL             1
 #define SD_GC_INIT_FREQUENCY      0
@@ -22,32 +27,101 @@ static const u8 sd_clock_div[64] = {
     0xFF, 0x02, 0x05, 0x05, 0xFF, 0x02, 0x05, 0x05, 0xFF, 0x02, 0x05, 0x05, 0xFF, 0x03, 0x05, 0x05,
 };
 
-extern OSTick OSGetTick(void);
-
-static bool sd_initialized;
-static bool sd_sdhc;
-static u32 sd_last_error;
-static u32 sd_last_error_detail;
+static bool sd_initialized = false;
+static bool sd_sdhc = false;
+static u32 sd_last_error = SDIO_ERROR_NONE;
+static u32 sd_last_error_detail = 0;
 static u32 sd_frequency = SD_GC_INIT_FREQUENCY;
 static u8 sd_scratch[SD_SECTOR_SIZE];
 
-static bool sd_begin(bool select_device);
+#define EXI_REGS                ((volatile u32*)0xCC006800)
+#define EXI_REG(channel, index) EXI_REGS[(channel) * 5 + (index)]
+#define EXI_SPIN_LIMIT          0x10000
 
-static bool sd_wait_not_busy_selected(u32 timeout_ticks) {
-    u8 value;
-    OSTick start = OSGetTick();
+bool sd_gc_exi_present(s32 channel) {
+    u32 status;
 
-    do {
-        value = 0xFF;
-        if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &value, 1, SD_GC_EXI_READ)) {
+    if (channel < 0 || channel > 1) {
+        return false;
+    }
+
+    status = EXI_REG(channel, 0);
+    return (status & 0x1000) != 0;
+}
+
+bool sd_gc_exi_begin(s32 channel, u32 frequency, bool select_device) {
+    u32 status;
+
+    if (channel < 0 || channel > 1 || frequency > 5 || !sd_gc_exi_present(channel)) {
+        return false;
+    }
+
+    status = EXI_REG(channel, 0) & 0x405;
+    status |= frequency << 4;
+    if (select_device) {
+        status |= 0x80;
+    }
+
+    EXI_REG(channel, 0) = status;
+    return true;
+}
+
+bool sd_gc_exi_end(s32 channel) {
+    if (channel < 0 || channel > 1) {
+        return false;
+    }
+
+    EXI_REG(channel, 0) &= ~0x80;
+    return true;
+}
+
+bool sd_gc_exi_transfer(s32 channel, u8* data, u32 length, u32 mode) {
+    if (channel < 0 || channel > 1 || data == NULL || (mode != SD_GC_EXI_WRITE && mode != SD_GC_EXI_READ)) {
+        return false;
+    }
+
+    while (length > 0) {
+        u32 chunk = length < 4 ? length : 4;
+        u32 value = 0;
+        u32 tries = EXI_SPIN_LIMIT;
+
+        for (u32 i = 0; i < chunk; i++) {
+            if (mode == SD_GC_EXI_READ) {
+                data[i] = 0xFF;
+            }
+            value |= (u32)data[i] << ((3 - i) * 8);
+        }
+        EXI_REG(channel, 4) = value;
+
+        EXI_REG(channel, 3) = (mode << 2) | 1 | ((chunk - 1) << 4);
+        while (tries > 0 && (EXI_REG(channel, 3) & 1) != 0) {
+            tries--;
+        }
+        if ((EXI_REG(channel, 3) & 1) != 0) {
             return false;
         }
-        if (value != 0) {
-            return true;
-        }
-    } while ((u32)(OSGetTick() - start) < timeout_ticks);
 
-    return false;
+        if (mode == SD_GC_EXI_READ) {
+            value = EXI_REG(channel, 4);
+            for (u32 i = 0; i < chunk; i++) {
+                data[i] = (u8)(value >> ((3 - i) * 8));
+            }
+        }
+
+        data += chunk;
+        length -= chunk;
+    }
+
+    return true;
+}
+
+static inline u32 CheckTime(OSTick start, OSTick end) {
+    return (u32)(OSGetTick() - start) < end;
+}
+
+static bool DoEXIEnd(bool result) {
+    sd_gc_exi_end(SD_GC_CHANNEL);
+    return result;
 }
 
 static u8 sd_crc7(const u8* data, u32 length) {
@@ -55,11 +129,14 @@ static u8 sd_crc7(const u8* data, u32 length) {
 
     for (u32 i = 0; i < length; i++) {
         u8 value = data[i];
+
         for (u32 bit = 0; bit < 8; bit++) {
             crc <<= 1;
+
             if (((value ^ crc) & 0x80) != 0) {
                 crc ^= 0x09;
             }
+
             value <<= 1;
         }
     }
@@ -72,6 +149,7 @@ static u16 sd_crc16(const u8* data, u32 length) {
 
     for (u32 i = 0; i < length; i++) {
         crc ^= (u16)data[i] << 8;
+
         for (u32 bit = 0; bit < 8; bit++) {
             crc = (crc & 0x8000) ? (u16)((crc << 1) ^ 0x1021) : (u16)(crc << 1);
         }
@@ -80,14 +158,11 @@ static u16 sd_crc16(const u8* data, u32 length) {
     return crc;
 }
 
-static bool sd_begin(bool select_device) {
-    return sd_gc_exi_begin(SD_GC_CHANNEL, sd_frequency, select_device);
-}
-
 static bool sd_send_idle_clocks(void) {
     u8 clocks[0x80];
 
     memset(clocks, 0xFF, sizeof(clocks));
+
     if (!sd_gc_exi_begin(SD_GC_CHANNEL, SD_GC_INIT_FREQUENCY, false)) {
         return false;
     }
@@ -115,15 +190,15 @@ static bool sd_send_command(u8 command, u32 argument) {
     packet[5] = sd_crc7(packet, 5);
     memset(clocks, 0xFF, sizeof(clocks));
 
-    if (!sd_begin(true)) {
+    if (!sd_gc_exi_begin(SD_GC_CHANNEL, sd_frequency, true)) {
         return false;
     }
 
     result = sd_gc_exi_transfer(SD_GC_CHANNEL, clocks, sizeof(clocks), SD_GC_EXI_WRITE) &&
              sd_gc_exi_transfer(SD_GC_CHANNEL, packet, 5, SD_GC_EXI_WRITE) &&
              sd_gc_exi_transfer(SD_GC_CHANNEL, packet + 5, 1, SD_GC_EXI_WRITE);
-    sd_gc_exi_end(SD_GC_CHANNEL);
-    return result;
+
+    return DoEXIEnd(result);
 }
 
 static bool sd_read_response(u8* response, u32 length, bool skip_stuff_byte) {
@@ -131,38 +206,36 @@ static bool sd_read_response(u8* response, u32 length, bool skip_stuff_byte) {
     OSTick start;
     bool result = false;
 
-    if (response == NULL || length == 0 || !sd_begin(true)) {
+    if (response == NULL || length == 0 || !sd_gc_exi_begin(SD_GC_CHANNEL, sd_frequency, true)) {
         return false;
     }
 
-    if (skip_stuff_byte && !sd_gc_exi_transfer(SD_GC_CHANNEL, &value, 1, SD_GC_EXI_READ)) {
-        goto done;
-    }
+    if (!skip_stuff_byte || sd_gc_exi_transfer(SD_GC_CHANNEL, &value, 1, SD_GC_EXI_READ)) {
+        start = OSGetTick();
+        do {
+            value = 0xFF;
 
-    start = OSGetTick();
-    do {
-        value = 0xFF;
-        if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &value, 1, SD_GC_EXI_READ)) {
-            goto done;
+            if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &value, 1, SD_GC_EXI_READ)) {
+                return DoEXIEnd(result);
+            }
+        } while ((value & 0x80) != 0 && CheckTime(start, SD_RESPONSE_TIMEOUT_TICKS));
+
+        if (!(value & 0x80)) {
+            response[0] = value;
+
+            if (length > 1) {
+                memset(response + 1, 0xFF, length - 1);
+
+                if (!sd_gc_exi_transfer(SD_GC_CHANNEL, response + 1, length - 1, SD_GC_EXI_READ)) {
+                    return DoEXIEnd(result);
+                }
+            }
+
+            result = true;
         }
-    } while ((value & 0x80) != 0 && (u32)(OSGetTick() - start) < SD_RESPONSE_TIMEOUT_TICKS);
-
-    if ((value & 0x80) != 0) {
-        goto done;
     }
 
-    response[0] = value;
-    if (length > 1) {
-        memset(response + 1, 0xFF, length - 1);
-        if (!sd_gc_exi_transfer(SD_GC_CHANNEL, response + 1, length - 1, SD_GC_EXI_READ)) {
-            goto done;
-        }
-    }
-    result = true;
-
-done:
-    sd_gc_exi_end(SD_GC_CHANNEL);
-    return result;
+    return DoEXIEnd(result);
 }
 
 static bool sd_command_response(u8 command, u32 argument, u8* response, u32 length) {
@@ -175,32 +248,28 @@ static bool sd_read_data_block(u8* data, u32 length) {
     OSTick start;
     bool result = false;
 
-    if (data == NULL || length == 0 || !sd_begin(true)) {
+    if (data == NULL || length == 0 || !sd_gc_exi_begin(SD_GC_CHANNEL, sd_frequency, true)) {
         return false;
     }
 
     start = OSGetTick();
     do {
         token = 0xFF;
+
         if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &token, 1, SD_GC_EXI_READ)) {
-            goto done;
+            return DoEXIEnd(result);
         }
-    } while (token == 0xFF && (u32)(OSGetTick() - start) < SD_RESPONSE_TIMEOUT_TICKS);
+    } while (token == 0xFF && CheckTime(start, SD_RESPONSE_TIMEOUT_TICKS));
 
-    if (token != 0xFE || !sd_gc_exi_transfer(SD_GC_CHANNEL, data, length, SD_GC_EXI_READ)) {
-        goto done;
+    if (token == 0xFE && sd_gc_exi_transfer(SD_GC_CHANNEL, data, length, SD_GC_EXI_READ)) {
+        crc_bytes[0] = crc_bytes[1] = 0xFF;
+
+        if (sd_gc_exi_transfer(SD_GC_CHANNEL, crc_bytes, sizeof(crc_bytes), SD_GC_EXI_READ)) {
+            result = (((u16)crc_bytes[0] << 8) | crc_bytes[1]) == sd_crc16(data, length);
+        }
     }
 
-    crc_bytes[0] = crc_bytes[1] = 0xFF;
-    if (!sd_gc_exi_transfer(SD_GC_CHANNEL, crc_bytes, sizeof(crc_bytes), SD_GC_EXI_READ)) {
-        goto done;
-    }
-
-    result = (((u16)crc_bytes[0] << 8) | crc_bytes[1]) == sd_crc16(data, length);
-
-done:
-    sd_gc_exi_end(SD_GC_CHANNEL);
-    return result;
+    return DoEXIEnd(result);
 }
 
 static bool sd_write_data_block(const u8* data, u32 length, u8 token, u32 block_index) {
@@ -211,71 +280,70 @@ static bool sd_write_data_block(const u8* data, u32 length, u8 token, u32 block_
     OSTick start;
     bool result = false;
 
-    if (data == NULL || length == 0 || !sd_begin(true)) {
+    if (data == NULL || length == 0 || !sd_gc_exi_begin(SD_GC_CHANNEL, sd_frequency, true)) {
         return false;
     }
 
     crc = sd_crc16(data, length);
     crc_bytes[0] = (u8)(crc >> 8);
     crc_bytes[1] = (u8)crc;
-    if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &token, 1, SD_GC_EXI_WRITE) ||
-        !sd_gc_exi_transfer(SD_GC_CHANNEL, (u8*)data, length, SD_GC_EXI_WRITE)) {
-        goto done;
-    }
 
-    start = OSGetTick();
-    while ((u32)(OSGetTick() - start) < 41) {}
+    if (sd_gc_exi_transfer(SD_GC_CHANNEL, &token, 1, SD_GC_EXI_WRITE) &&
+        sd_gc_exi_transfer(SD_GC_CHANNEL, (u8*)data, length, SD_GC_EXI_WRITE)) {
 
-    if (!sd_gc_exi_transfer(SD_GC_CHANNEL, crc_bytes, sizeof(crc_bytes), SD_GC_EXI_WRITE)) {
-        goto done;
-    }
-    sd_gc_exi_end(SD_GC_CHANNEL);
+        start = OSGetTick();
+        while (CheckTime(start, 41)) {}
 
-    if (!sd_begin(true)) {
-        sd_last_error = SDIO_ERROR_WRITE_DATA;
-        return false;
-    }
+        if (sd_gc_exi_transfer(SD_GC_CHANNEL, crc_bytes, sizeof(crc_bytes), SD_GC_EXI_WRITE)) {
+            sd_gc_exi_end(SD_GC_CHANNEL);
 
-    start = OSGetTick();
-    do {
-        response = 0xFF;
-        if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &response, 1, SD_GC_EXI_READ)) {
-            goto done;
+            if (!sd_gc_exi_begin(SD_GC_CHANNEL, sd_frequency, true)) {
+                sd_last_error = SDIO_ERROR_WRITE_DATA;
+                return false;
+            }
+
+            start = OSGetTick();
+            do {
+                response = 0xFF;
+                if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &response, 1, SD_GC_EXI_READ)) {
+                    return DoEXIEnd(result);
+                }
+
+                response &= 0x1F;
+                if (response == 0x05 || response == 0x0B || response == 0x0D) {
+                    break;
+                }
+            } while (CheckTime(start, SD_RESPONSE_TIMEOUT_TICKS));
+
+            if (response != 0x05 && response != 0x0B && response != 0x0D) {
+                sd_last_error_detail = ((u32)response << 8) | (block_index & 0xFF);
+                sd_last_error = SDIO_ERROR_WRITE_DATA;
+            } else {
+                sd_last_error_detail = (u32)response << 8;
+
+                start = OSGetTick();
+                do {
+                    busy = 0;
+
+                    if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &busy, 1, SD_GC_EXI_READ)) {
+                        return DoEXIEnd(result);
+                    }
+                } while (busy == 0 && CheckTime(start, SD_BUSY_TIMEOUT_TICKS));
+
+                sd_last_error_detail |= busy;
+
+                if (busy == 0) {
+                    sd_last_error = SDIO_ERROR_WRITE_BUSY_TIMEOUT;
+                } else if (response != 0x05) {
+                    sd_last_error = SDIO_ERROR_WRITE_REJECTED;
+                } else {
+                    result = true;
+                }
+            }
         }
-        response &= 0x1F;
-        if (response == 0x05 || response == 0x0B || response == 0x0D) {
-            break;
-        }
-    } while ((u32)(OSGetTick() - start) < SD_RESPONSE_TIMEOUT_TICKS);
-    if (response != 0x05 && response != 0x0B && response != 0x0D) {
-        sd_last_error_detail = ((u32)response << 8) | (block_index & 0xFF);
-        sd_last_error = SDIO_ERROR_WRITE_DATA;
-        goto done;
     }
-    sd_last_error_detail = (u32)response << 8;
 
-    start = OSGetTick();
-    do {
-        busy = 0;
-        if (!sd_gc_exi_transfer(SD_GC_CHANNEL, &busy, 1, SD_GC_EXI_READ)) {
-            goto done;
-        }
-    } while (busy == 0 && (u32)(OSGetTick() - start) < SD_BUSY_TIMEOUT_TICKS);
-    sd_last_error_detail |= busy;
-
-    if (busy == 0) {
-        sd_last_error = SDIO_ERROR_WRITE_BUSY_TIMEOUT;
-        goto done;
-    }
-    if (response != 0x05) {
-        sd_last_error = SDIO_ERROR_WRITE_REJECTED;
-        goto done;
-    }
-    result = true;
-
-done:
-    sd_gc_exi_end(SD_GC_CHANNEL);
-    return result;
+    return DoEXIEnd(result);
 }
 
 bool sdio_is_initialized(void) {
@@ -324,6 +392,7 @@ bool sdio_write_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer) {
     for (u32 i = 0; i < sec_cnt; i++) {
         u64 block_address = sd_sdhc ? (u64)sector + i : ((u64)sector + i) * SD_SECTOR_SIZE;
         response = 0xFF;
+
         if (!sd_command_response(24, (u32)block_address, &response, 1) || response != 0) {
             sd_last_error = SDIO_ERROR_WRITE_CMD;
             sd_last_error_detail = ((u32)response << 8) | (i & 0xFF);
@@ -332,16 +401,19 @@ bool sdio_write_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer) {
 
         if (data == NULL) {
             memset(sd_scratch, 0, sizeof(sd_scratch));
+
             if (!sd_write_data_block(sd_scratch, sizeof(sd_scratch), 0xFE, i)) {
                 if (sd_last_error == SDIO_ERROR_NONE) {
                     sd_last_error = SDIO_ERROR_WRITE_DATA;
                 }
+
                 return false;
             }
         } else if (!sd_write_data_block(data + i * SD_SECTOR_SIZE, SD_SECTOR_SIZE, 0xFE, i)) {
             if (sd_last_error == SDIO_ERROR_NONE) {
                 sd_last_error = SDIO_ERROR_WRITE_DATA;
             }
+
             return false;
         }
     }
@@ -374,6 +446,7 @@ bool sdio_read_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer) {
 
     for (u32 i = 0; i < sec_cnt; i++) {
         u8* target = data != NULL ? data + i * SD_SECTOR_SIZE : sd_scratch;
+
         if (!sd_read_data_block(target, SD_SECTOR_SIZE)) {
             u8 stop_response;
             sd_command_response(12, 0, &stop_response, 1);
@@ -386,20 +459,21 @@ bool sdio_read_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer) {
         sd_last_error = SDIO_ERROR_READ_STOP;
         return false;
     }
+
     sd_last_error = SDIO_ERROR_NONE;
     return true;
 }
 
 bool sdio_stop(void) {
-    if (!sd_initialized) {
-        return false;
+    if (sd_initialized) {
+        sd_initialized = false;
+        sd_sdhc = false;
+        sd_last_error = SDIO_ERROR_NONE;
+        sd_frequency = SD_GC_INIT_FREQUENCY;
+        return true;
     }
 
-    sd_initialized = false;
-    sd_sdhc = false;
-    sd_last_error = SDIO_ERROR_NONE;
-    sd_frequency = SD_GC_INIT_FREQUENCY;
-    return true;
+    return false;
 }
 
 bool sdio_start(void) {
@@ -417,10 +491,12 @@ bool sdio_start(void) {
     sd_sdhc = false;
     sd_frequency = SD_GC_INIT_FREQUENCY;
     sd_last_error = SDIO_ERROR_NONE;
+
     if (!sdio_is_inserted()) {
         sd_last_error = SDIO_ERROR_NO_EXI;
         return false;
     }
+
     if (!sd_send_idle_clocks()) {
         sd_last_error = SDIO_ERROR_IDLE_CLOCKS;
         return false;
@@ -459,14 +535,16 @@ bool sdio_start(void) {
             sd_last_error = SDIO_ERROR_ACMD41;
             return false;
         }
+
         if (command_response == 0) {
             break;
         }
+
         if (command_response != 1) {
             sd_last_error = SDIO_ERROR_ACMD41;
             return false;
         }
-    } while ((u32)(OSGetTick() - start) < SD_INIT_TIMEOUT_TICKS);
+    } while (CheckTime(start, SD_INIT_TIMEOUT_TICKS));
 
     if (command_response != 0 || !sd_command_response(58, 0, response, sizeof(response)) || response[0] != 0) {
         sd_last_error = SDIO_ERROR_CMD58;
@@ -476,22 +554,23 @@ bool sdio_start(void) {
     ocr = ((u32)response[1] << 24) | ((u32)response[2] << 16) | ((u32)response[3] << 8) | response[4];
     sd_sdhc = (ocr & 0x40000000) != 0;
 
-    if (!sd_sdhc) {
+    if (sd_sdhc) {
+        if (sd_command_response(9, 0, &command_response, 1) && command_response == 0 &&
+            sd_read_data_block(csd, sizeof(csd))) {
+            u8 transfer_speed = csd[3];
+            u8 speed_unit = transfer_speed & 7;
+    
+            if (speed_unit <= 3) {
+                u8 frequency = sd_clock_div[(((transfer_speed >> 3) & 0xF) * 4) + speed_unit];
+                if (frequency != 0xFF) {
+                    sd_frequency = frequency;
+                }
+            }
+        }
+    } else {
         if (!sd_command_response(16, SD_SECTOR_SIZE, &command_response, 1) || command_response != 0) {
             sd_last_error = SDIO_ERROR_SET_BLOCKLEN;
             return false;
-        }
-    }
-
-    if (sd_command_response(9, 0, &command_response, 1) && command_response == 0 &&
-        sd_read_data_block(csd, sizeof(csd))) {
-        u8 transfer_speed = csd[3];
-        u8 speed_unit = transfer_speed & 7;
-        if (speed_unit <= 3) {
-            u8 frequency = sd_clock_div[(((transfer_speed >> 3) & 0xF) * 4) + speed_unit];
-            if (frequency != 0xFF) {
-                sd_frequency = frequency;
-            }
         }
     }
 
