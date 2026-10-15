@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "types.h"
+#include "version.h"
 
 #define PAGE_SIZE512                 512
 
@@ -54,6 +55,7 @@
 #define SD_ERROR_SUCCESS             0
 #define SD_ERROR_INVAL               1
 
+#if IS_GC
 #define SDIO_ERROR_NONE               0
 #define SDIO_ERROR_NO_EXI             1
 #define SDIO_ERROR_IDLE_CLOCKS        2
@@ -73,6 +75,10 @@
 #define SD_GC_EXI_WRITE               1
 #define SD_GC_EXI_READ                2
 
+uint32_t sdio_get_error(void);
+uint32_t sdio_get_error_detail(void);
+#endif
+
 bool sdio_is_initialized(void);
 bool sdio_is_inserted(void);
 bool sdio_is_sdhc(void);
@@ -80,7 +86,5 @@ bool sdio_write_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer);
 bool sdio_read_sectors(uint32_t sector, uint32_t sec_cnt, void* buffer);
 bool sdio_stop(void);
 bool sdio_start(void);
-uint32_t sdio_get_error(void);
-uint32_t sdio_get_error_detail(void);
 
 #endif
