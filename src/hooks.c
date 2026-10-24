@@ -16,6 +16,8 @@ extern u8 romSetCacheSize_hook_addr[];
 extern u8 romLoadRange_hook_addr_1[];
 extern u8 romLoadRange_hook_addr_2[];
 extern u8 mcardWrite_hook_addr[];
+extern u8 cpuExecuteJump_hook_addr_ha[];
+extern u8 cpuExecuteJump_hook_addr_l[];
 #endif
 
 // Change an instruction in memory.
@@ -197,6 +199,30 @@ bool mcardWrite_hook(MemCard* pMCard, s32 address, s32 size, char* data) {
     return mcardWrite(pMCard, address, size, data);
 }
 
+s32 cpuExecuteJump_hook(Cpu* pCPU, s32 nCount, s32 nAddressN64, s32 nAddressGCN) {
+    nCount = OSGetTick();
+
+    if (pCPU->nWaitPC != 0) {
+        pCPU->nMode |= 8;
+    } else {
+        pCPU->nMode &= ~8;
+    }
+
+    if (gpSystem->eTypeROM == 4 /* SRT_ZELDA1 */ && nAddressN64 == 0x81000000) {
+        // do nothing instead of trying to play the movie
+    } else {
+        pCPU->nMode |= 4;
+        pCPU->nPC = nAddressN64;
+
+        if (!cpuExecuteUpdate(pCPU, &nAddressGCN, nCount)) {
+            return 0;
+        }
+    }
+
+    pCPU->nTickLast = OSGetTick();
+    return nAddressGCN;
+}
+
 #endif
 
 void init_hooks(void) {
@@ -224,5 +250,9 @@ void init_hooks(void) {
 
     // Hook to mcardWrite to fix gz settings not saving
     patch_bl(mcardWrite_hook_addr, mcardWrite_hook);
+
+    // Hook to cpuExecuteJump to avoid playing the non-existent credits movie
+    patch_ha(cpuExecuteJump_hook_addr_ha, cpuExecuteJump_hook);
+    patch_l(cpuExecuteJump_hook_addr_l, cpuExecuteJump_hook);
 #endif
 }

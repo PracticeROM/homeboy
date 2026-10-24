@@ -30,3 +30,5 @@ OSGetTick                           = 0x800A14F8;
 ganMapGPR                           = 0x800ED338;
 gpSystem                            = 0x8018B894;
 gnFlagZelda                         = 0x8018B968;
+cpuExecuteJump_hook_addr_ha         = 0x80036170;
+cpuExecuteJump_hook_addr_l          = 0x80036174;

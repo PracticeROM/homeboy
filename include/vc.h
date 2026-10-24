@@ -148,7 +148,7 @@ typedef struct Ram {
 #endif
 } Ram; // size = 0x48
 
-#define SYSTEM_CPU(pSystem) ((void*)(((System*)(pSystem))->apObject[SOT_CPU]))
+#define SYSTEM_CPU(pSystem) ((Cpu*)(((System*)(pSystem))->apObject[SOT_CPU]))
 #define SYSTEM_ROM(pSystem) ((Rom*)(((System*)(pSystem))->apObject[SOT_ROM]))
 
 // xlObject.h
@@ -228,7 +228,7 @@ int iosCreateHeap(void* heap, size_t size);
 void* iosAllocAligned(int hid, size_t size, size_t page_size);
 bool iosFree(int hid, void* ptr);
 
-extern u32 reset_flag; // TODO: use decomp name
+extern bool sResetBtnPressed;
 
 #define title_id             (*(volatile u32*)0x80003180)
 

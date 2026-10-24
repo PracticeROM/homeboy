@@ -37,4 +37,4 @@ iosAllocAligned                     = 0x800B9B44;
 iosFree                             = 0x800B9B48;
 ganMapGPR                           = 0x80170B68;
 gpSystem                            = 0x8025CFE0;
-reset_flag                          = 0x8025D0EC;
+sResetBtnPressed                    = 0x8025D0EC;

@@ -86,7 +86,9 @@ static void do_status_update() {
             fs_close(fd);
         }
 
-        reset_flag = 1;
+        // see
+        // https://github.com/zeldaret/oot-vc/blob/6fee0769e9e2f0ba7ad20c2b36c5c6063f24a8bd/src/emulator/helpRVL.c#L1170
+        sResetBtnPressed = 1;
     }
 #endif
 
